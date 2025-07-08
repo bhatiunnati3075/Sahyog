@@ -1,12 +1,16 @@
 import React from 'react';
-import { Home, Bell, Activity, Music, MessageCircle, Phone, Shield, Users } from 'lucide-react';
+import { Home, Bell, Activity, Music, MessageCircle, Phone, Shield, Users, LogOut } from 'lucide-react';
 import coupleImage from '../assets/couple.png'; 
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
+
 interface HeaderProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  user: any; // Add user prop to conditionally show logout
 }
 
-const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
+const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange, user }) => {
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: Home },
     { 
@@ -57,6 +61,14 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
     },
   ];
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   const getButtonClasses = (item: typeof navItems[0]) => {
     const baseClasses = 'flex flex-col items-center px-4 py-3 rounded-lg transition-all duration-200 text-base font-medium';
     
@@ -95,7 +107,7 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
     <header className="bg-white shadow-lg border-b-4 border-orange-200">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
-          {/* Updated Logo & Title with couple image */}
+          {/* Logo & Title */}
           <div className="flex items-center space-x-3">
             <div className="p-1 rounded-full">
               <img 
@@ -110,23 +122,35 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
             </div>
           </div>
           
-          <nav className="hidden md:flex space-x-1">
-            {navItems.map((item) => (
+          <div className="flex items-center space-x-4">
+            <nav className="hidden md:flex space-x-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => onSectionChange(item.id)}
+                  className={getButtonClasses(item)}
+                >
+                  <div className="relative">
+                    <item.icon className="h-6 w-6 mb-1" />
+                    {item.highlight && activeSection !== item.id && (
+                      <span className={`absolute -top-1 -right-1 h-2 w-2 rounded-full bg-${item.color}-500`}></span>
+                    )}
+                  </div>
+                  <span className="text-sm">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+
+            {user && (
               <button
-                key={item.id}
-                onClick={() => onSectionChange(item.id)}
-                className={getButtonClasses(item)}
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
               >
-                <div className="relative">
-                  <item.icon className="h-6 w-6 mb-1" />
-                  {item.highlight && activeSection !== item.id && (
-                    <span className={`absolute -top-1 -right-1 h-2 w-2 rounded-full bg-${item.color}-500`}></span>
-                  )}
-                </div>
-                <span className="text-sm">{item.label}</span>
+                <LogOut className="w-4 h-4" />
+                <span className="hidden md:inline">Sign Out</span>
               </button>
-            ))}
-          </nav>
+            )}
+          </div>
         </div>
         
         {/* Mobile Navigation */}
@@ -147,6 +171,15 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
                 <span className="text-xs">{item.label}</span>
               </button>
             ))}
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1 text-sm bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 transition"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-xs">Sign Out</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

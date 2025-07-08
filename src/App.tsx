@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import Reminders from './components/Remainders';
@@ -7,43 +9,48 @@ import Health from './components/Health';
 import Entertainment from './components/Entertainment';
 import Companionship from './components/Companionship';
 import TechAssist from './components/TechAssist';
-import logo from './assets/couple.png'; 
+import Emergency from './components/Emergency';
+import CaregiverDashboard from './components/CaregiverDashboard';
+import Login from './components/login';
+import Register from './components/registration';
+import logo from './assets/couple.png';
 
 function App() {
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [splashVisible, setSplashVisible] = useState(true);
+  const [showRegister, setShowRegister] = useState(false);
 
-  // Simulate loading/authentication
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      setAuthLoading(false);
       setSplashVisible(false);
-    }, 3000); // 3 second splash screen
-
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
   const renderActiveSection = () => {
     switch (activeSection) {
-      case 'dashboard':
-        return <Dashboard onSectionChange={setActiveSection} />;
-      case 'reminders':
-        return <Reminders />;
-      case 'health':
-        return <Health />;
-      case 'entertainment':
-        return <Entertainment />;
-      case 'companionship':
-        return <Companionship />;
-      case 'tech-assist':
-        return <TechAssist />;
-      default:
-        return <Dashboard onSectionChange={setActiveSection} />;
+      case 'dashboard': return <Dashboard onSectionChange={setActiveSection} />;
+      case 'reminders': return <Reminders />;
+      case 'health': return <Health />;
+      case 'entertainment': return <Entertainment />;
+      case 'companionship': return <Companionship />;
+      case 'tech-assist': return <TechAssist />;
+      case 'emergency': return <Emergency />;
+      case 'caregiver': return <CaregiverDashboard />;
+      default: return <Dashboard onSectionChange={setActiveSection} />;
     }
   };
 
-  // Show splash screen while loading
   if (authLoading || splashVisible) {
     return (
       <AnimatePresence>
@@ -75,10 +82,25 @@ function App() {
     );
   }
 
-  // Main app content
+  if (!user) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-orange-50">
+        {showRegister ? (
+          <Register onSwitchToLogin={() => setShowRegister(false)} />
+        ) : (
+          <Login onSwitchToRegister={() => setShowRegister(true)} />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50">
-      <Header activeSection={activeSection} onSectionChange={setActiveSection} />
+      <Header 
+        activeSection={activeSection} 
+        onSectionChange={setActiveSection} 
+        user={user}
+      />
       <main className="container mx-auto px-4 py-6 max-w-7xl">
         {renderActiveSection()}
       </main>
