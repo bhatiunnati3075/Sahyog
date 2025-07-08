@@ -1,6 +1,6 @@
 import React from 'react';
-import { Heart, Home, Bell, Activity, Music, MessageCircle, Phone, Shield, Users } from 'lucide-react';
-
+import { Home, Bell, Activity, Music, MessageCircle, Phone, Shield, Users } from 'lucide-react';
+import coupleImage from '../assets/couple.png'; 
 interface HeaderProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
@@ -28,12 +28,33 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
       label: 'Entertainment', 
       icon: Music,
       highlight: true,
-      color: 'purple' // New color for entertainment
+      color: 'purple'
     },
-    { id: 'companionship', label: 'Chat', icon: MessageCircle },
-    { id: 'tech-assist', label: 'Tech Help', icon: Phone },
-    { id: 'emergency', label: 'Emergency', icon: Shield, color: 'red' },
-    { id: 'caregiver', label: 'Family', icon: Users },
+    { 
+      id: 'companionship', 
+      label: 'Chat', 
+      icon: MessageCircle,
+      highlight: true,
+      color: 'pink'
+    },
+    { 
+      id: 'tech-assist', 
+      label: 'Tech Help', 
+      icon: Phone,
+      highlight: true,
+      color: 'blue'
+    },
+    { 
+      id: 'emergency', 
+      label: 'Emergency', 
+      icon: Shield, 
+      color: 'red' 
+    },
+    { 
+      id: 'caregiver', 
+      label: 'Family', 
+      icon: Users 
+    },
   ];
 
   const getButtonClasses = (item: typeof navItems[0]) => {
@@ -43,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
       if (item.color) {
         return `${baseClasses} bg-${item.color}-100 text-${item.color}-700 shadow-md border-2 border-${item.color}-300`;
       }
-      return `${baseClasses} bg-blue-100 text-blue-700 shadow-md`;
+      return `${baseClasses} bg-gray-100 text-gray-700 shadow-md`;
     }
     
     if (item.color) {
@@ -60,7 +81,7 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
       if (item.color) {
         return `${baseClasses} bg-${item.color}-100 text-${item.color}-700 border-2 border-${item.color}-300`;
       }
-      return `${baseClasses} bg-blue-100 text-blue-700`;
+      return `${baseClasses} bg-gray-100 text-gray-700`;
     }
     
     if (item.color) {
@@ -74,9 +95,14 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
     <header className="bg-white shadow-lg border-b-4 border-orange-200">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
+          {/* Updated Logo & Title with couple image */}
           <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-r from-blue-600 to-orange-500 p-3 rounded-full">
-              <Heart className="h-8 w-8 text-white" />
+            <div className="p-1 rounded-full">
+              <img 
+                src={coupleImage} 
+                alt="Couple" 
+                className="h-12 w-12 object-contain" 
+              />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Sahyog AI</h1>
