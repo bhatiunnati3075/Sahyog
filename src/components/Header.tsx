@@ -9,14 +9,66 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: Home },
-    { id: 'reminders', label: 'Reminders', icon: Bell },
-    { id: 'health', label: 'Health', icon: Activity },
-    { id: 'entertainment', label: 'Entertainment', icon: Music },
+    { 
+      id: 'reminders', 
+      label: 'Reminders', 
+      icon: Bell,
+      highlight: true,
+      color: 'orange'
+    },
+    { 
+      id: 'health', 
+      label: 'Health', 
+      icon: Activity,
+      highlight: true,
+      color: 'green'
+    },
+    { 
+      id: 'entertainment', 
+      label: 'Entertainment', 
+      icon: Music,
+      highlight: true,
+      color: 'purple' // New color for entertainment
+    },
     { id: 'companionship', label: 'Chat', icon: MessageCircle },
     { id: 'tech-assist', label: 'Tech Help', icon: Phone },
-    { id: 'emergency', label: 'Emergency', icon: Shield },
+    { id: 'emergency', label: 'Emergency', icon: Shield, color: 'red' },
     { id: 'caregiver', label: 'Family', icon: Users },
   ];
+
+  const getButtonClasses = (item: typeof navItems[0]) => {
+    const baseClasses = 'flex flex-col items-center px-4 py-3 rounded-lg transition-all duration-200 text-base font-medium';
+    
+    if (activeSection === item.id) {
+      if (item.color) {
+        return `${baseClasses} bg-${item.color}-100 text-${item.color}-700 shadow-md border-2 border-${item.color}-300`;
+      }
+      return `${baseClasses} bg-blue-100 text-blue-700 shadow-md`;
+    }
+    
+    if (item.color) {
+      return `${baseClasses} text-${item.color}-600 hover:bg-${item.color}-50 hover:border hover:border-${item.color}-200`;
+    }
+    
+    return `${baseClasses} text-gray-600 hover:bg-gray-100 hover:text-blue-600`;
+  };
+
+  const getMobileButtonClasses = (item: typeof navItems[0]) => {
+    const baseClasses = 'flex flex-col items-center px-3 py-2 rounded-lg whitespace-nowrap transition-all duration-200';
+    
+    if (activeSection === item.id) {
+      if (item.color) {
+        return `${baseClasses} bg-${item.color}-100 text-${item.color}-700 border-2 border-${item.color}-300`;
+      }
+      return `${baseClasses} bg-blue-100 text-blue-700`;
+    }
+    
+    if (item.color) {
+      return `${baseClasses} text-${item.color}-600 hover:bg-${item.color}-50`;
+    }
+    
+    return `${baseClasses} text-gray-600 hover:bg-gray-100`;
+  };
 
   return (
     <header className="bg-white shadow-lg border-b-4 border-orange-200">
@@ -33,18 +85,19 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
           </div>
           
           <nav className="hidden md:flex space-x-1">
-            {navItems.map(({ id, label, icon: Icon }) => (
+            {navItems.map((item) => (
               <button
-                key={id}
-                onClick={() => onSectionChange(id)}
-                className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all duration-200 text-base font-medium ${
-                  activeSection === id
-                    ? 'bg-blue-100 text-blue-700 shadow-md'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600'
-                } ${id === 'emergency' ? 'bg-red-50 text-red-600 hover:bg-red-100' : ''}`}
+                key={item.id}
+                onClick={() => onSectionChange(item.id)}
+                className={getButtonClasses(item)}
               >
-                <Icon className="h-6 w-6 mb-1" />
-                <span className="text-sm">{label}</span>
+                <div className="relative">
+                  <item.icon className="h-6 w-6 mb-1" />
+                  {item.highlight && activeSection !== item.id && (
+                    <span className={`absolute -top-1 -right-1 h-2 w-2 rounded-full bg-${item.color}-500`}></span>
+                  )}
+                </div>
+                <span className="text-sm">{item.label}</span>
               </button>
             ))}
           </nav>
@@ -53,18 +106,19 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange }) => {
         {/* Mobile Navigation */}
         <div className="md:hidden pb-4">
           <div className="flex overflow-x-auto space-x-2 pb-2">
-            {navItems.map(({ id, label, icon: Icon }) => (
+            {navItems.map((item) => (
               <button
-                key={id}
-                onClick={() => onSectionChange(id)}
-                className={`flex flex-col items-center px-3 py-2 rounded-lg whitespace-nowrap transition-all duration-200 ${
-                  activeSection === id
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                } ${id === 'emergency' ? 'bg-red-50 text-red-600' : ''}`}
+                key={item.id}
+                onClick={() => onSectionChange(item.id)}
+                className={getMobileButtonClasses(item)}
               >
-                <Icon className="h-5 w-5 mb-1" />
-                <span className="text-xs">{label}</span>
+                <div className="relative">
+                  <item.icon className="h-5 w-5 mb-1" />
+                  {item.highlight && activeSection !== item.id && (
+                    <span className={`absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-${item.color}-500`}></span>
+                  )}
+                </div>
+                <span className="text-xs">{item.label}</span>
               </button>
             ))}
           </div>
