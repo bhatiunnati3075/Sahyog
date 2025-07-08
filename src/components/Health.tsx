@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Activity, 
   Heart, 
@@ -9,13 +9,40 @@ import {
   TrendingDown,
   Plus,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  BarChart2,
+  LineChart
 } from 'lucide-react';
+import { Line, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface HealthRecord {
   id: string;
   type: 'bp' | 'sugar' | 'weight' | 'temperature' | 'oxygen';
   value: string;
+  numericValue: number;
   timestamp: Date;
   normal: boolean;
 }
@@ -26,6 +53,7 @@ const Health: React.FC = () => {
       id: '1',
       type: 'bp',
       value: '120/80',
+      numericValue: 120,
       timestamp: new Date(),
       normal: true
     },
@@ -33,6 +61,7 @@ const Health: React.FC = () => {
       id: '2',
       type: 'sugar',
       value: '110 mg/dL',
+      numericValue: 110,
       timestamp: new Date(Date.now() - 3600000),
       normal: true
     },
@@ -40,7 +69,32 @@ const Health: React.FC = () => {
       id: '3',
       type: 'weight',
       value: '68 kg',
+      numericValue: 68,
       timestamp: new Date(Date.now() - 86400000),
+      normal: true
+    },
+    {
+      id: '4',
+      type: 'bp',
+      value: '118/78',
+      numericValue: 118,
+      timestamp: new Date(Date.now() - 2 * 86400000),
+      normal: true
+    },
+    {
+      id: '5',
+      type: 'sugar',
+      value: '105 mg/dL',
+      numericValue: 105,
+      timestamp: new Date(Date.now() - 3 * 86400000),
+      normal: true
+    },
+    {
+      id: '6',
+      type: 'weight',
+      value: '67.5 kg',
+      numericValue: 67.5,
+      timestamp: new Date(Date.now() - 4 * 86400000),
       normal: true
     }
   ]);
@@ -48,19 +102,32 @@ const Health: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newRecord, setNewRecord] = useState({
     type: 'bp' as const,
-    value: ''
+    value: '',
+    numericValue: 0
   });
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+  const [selectedMetric, setSelectedMetric] = useState<'bp' | 'sugar' | 'weight'>('bp');
+  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('week');
 
   const addHealthRecord = () => {
     if (newRecord.value) {
+      // Extract numeric value from the string
+      let numericValue = 0;
+      if (newRecord.type === 'bp') {
+        numericValue = parseFloat(newRecord.value.split('/')[0]);
+      } else {
+        numericValue = parseFloat(newRecord.value.replace(/[^0-9.]/g, ''));
+      }
+
       const record: HealthRecord = {
         id: Date.now().toString(),
         ...newRecord,
+        numericValue,
         timestamp: new Date(),
         normal: true // In real app, this would be calculated based on normal ranges
       };
       setHealthRecords(prev => [record, ...prev]);
-      setNewRecord({ type: 'bp', value: '' });
+      setNewRecord({ type: 'bp', value: '', numericValue: 0 });
       setShowAddForm(false);
     }
   };
@@ -98,6 +165,100 @@ const Health: React.FC = () => {
     "Get 7-8 hours of sleep each night",
     "Eat fresh fruits and vegetables daily"
   ];
+
+  // Filter records based on selected time range
+  const getFilteredRecords = () => {
+    const now = new Date();
+    let cutoffDate = new Date();
+    
+    switch (timeRange) {
+      case 'week':
+        cutoffDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        cutoffDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'all':
+        return healthRecords.filter(r => r.type === selectedMetric);
+    }
+    
+    return healthRecords.filter(r => 
+      r.type === selectedMetric && new Date(r.timestamp) >= cutoffDate
+    );
+  };
+
+  // Prepare chart data
+  const prepareChartData = () => {
+    const filteredRecords = getFilteredRecords()
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    
+    const labels = filteredRecords.map(record => 
+      record.timestamp.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    );
+    
+    const data = filteredRecords.map(record => record.numericValue);
+    
+    let borderColor, backgroundColor;
+    switch (selectedMetric) {
+      case 'bp':
+        borderColor = 'rgb(220, 38, 38)';
+        backgroundColor = 'rgba(220, 38, 38, 0.2)';
+        break;
+      case 'sugar':
+        borderColor = 'rgb(37, 99, 235)';
+        backgroundColor = 'rgba(37, 99, 235, 0.2)';
+        break;
+      case 'weight':
+        borderColor = 'rgb(22, 163, 74)';
+        backgroundColor = 'rgba(22, 163, 74, 0.2)';
+        break;
+      default:
+        borderColor = 'rgb(234, 88, 12)';
+        backgroundColor = 'rgba(234, 88, 12, 0.2)';
+    }
+    
+    return {
+      labels,
+      datasets: [
+        {
+          label: getHealthLabel(selectedMetric),
+          data,
+          borderColor,
+          backgroundColor,
+          tension: 0.1,
+          fill: true
+        }
+      ]
+    };
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: `${getHealthLabel(selectedMetric)} Over Time`,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: selectedMetric === 'bp' ? 'Systolic (mmHg)' : 
+                selectedMetric === 'sugar' ? 'mg/dL' : 'kg'
+        }
+      }
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -157,6 +318,81 @@ const Health: React.FC = () => {
         </div>
       </div>
 
+      {/* Health Metrics Visualization */}
+      <div className="bg-white rounded-2xl p-8 shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-gray-800">Health Trends</h3>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setChartType('line')}
+              className={`p-2 rounded-lg ${chartType === 'line' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100'}`}
+              title="Line Chart"
+            >
+              <LineChart className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setChartType('bar')}
+              className={`p-2 rounded-lg ${chartType === 'bar' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100'}`}
+              title="Bar Chart"
+            >
+              <BarChart2 className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setSelectedMetric('bp')}
+              className={`px-4 py-2 rounded-full ${selectedMetric === 'bp' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}
+            >
+              Blood Pressure
+            </button>
+            <button
+              onClick={() => setSelectedMetric('sugar')}
+              className={`px-4 py-2 rounded-full ${selectedMetric === 'sugar' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100'}`}
+            >
+              Blood Sugar
+            </button>
+            <button
+              onClick={() => setSelectedMetric('weight')}
+              className={`px-4 py-2 rounded-full ${selectedMetric === 'weight' ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}
+            >
+              Weight
+            </button>
+          </div>
+
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setTimeRange('week')}
+              className={`px-4 py-2 rounded-full ${timeRange === 'week' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100'}`}
+            >
+              Week
+            </button>
+            <button
+              onClick={() => setTimeRange('month')}
+              className={`px-4 py-2 rounded-full ${timeRange === 'month' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100'}`}
+            >
+              Month
+            </button>
+            <button
+              onClick={() => setTimeRange('all')}
+              className={`px-4 py-2 rounded-full ${timeRange === 'all' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100'}`}
+            >
+              All Data
+            </button>
+          </div>
+        </div>
+
+        <div className="h-80">
+          {chartType === 'line' ? (
+            <Line data={prepareChartData()} options={chartOptions} />
+          ) : (
+            <Bar data={prepareChartData()} options={chartOptions} />
+          )}
+        </div>
+      </div>
+
       {/* Add Health Record Form */}
       {showAddForm && (
         <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-green-200">
@@ -184,7 +420,7 @@ const Health: React.FC = () => {
                 value={newRecord.value}
                 onChange={(e) => setNewRecord(prev => ({ ...prev, value: e.target.value }))}
                 className="w-full p-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                placeholder="Enter your reading..."
+                placeholder={newRecord.type === 'bp' ? 'e.g. 120/80' : newRecord.type === 'sugar' ? 'e.g. 110 mg/dL' : 'e.g. 68 kg'}
               />
             </div>
 
