@@ -7,10 +7,10 @@ import {
   Music,
   MessageCircle,
   Phone,
-  Shield,
   Users,
   LogOut,
 } from 'lucide-react';
+import { FaOm } from 'react-icons/fa'; // Importing Om symbol from react-icons
 import coupleImage from '../assets/couple.png';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -35,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange, user })
     { id: 'entertainment', label: t('entertainment'), icon: Music, highlight: true, color: 'purple' },
     { id: 'companionship', label: t('chat'), icon: MessageCircle, highlight: true, color: 'pink' },
     { id: 'tech-assist', label: t('techHelp'), icon: Phone, highlight: true, color: 'blue' },
-    { id: 'emergency', label: t('emergency'), icon: Shield, color: 'red' },
+    { id: 'spiritual', label: t('Spiritual'), icon: FaOm, highlight: true, color: 'indigo' }, // Using Om symbol
     { id: 'caregiver', label: t('family'), icon: Users },
   ];
 
@@ -105,7 +105,7 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange, user })
                 </button>
               ))}
               
-              {/* Language Selector - Moved after navigation items */}
+              {/* Language Selector */}
               <div className="flex items-center ml-2">
                 <select
                   onChange={(e) => changeLanguage(e.target.value)}

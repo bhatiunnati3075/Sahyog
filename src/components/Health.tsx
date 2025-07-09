@@ -11,7 +11,8 @@ import {
   AlertTriangle,
   CheckCircle,
   BarChart2,
-  LineChart
+  LineChart,
+  Clock
 } from 'lucide-react';
 import { Line, Bar } from 'react-chartjs-2';
 import {
@@ -27,7 +28,6 @@ import {
 } from 'chart.js';
 import { useTranslation } from 'react-i18next';
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -119,19 +119,15 @@ const Health: React.FC = () => {
       if (newRecord.type === 'bp') {
         const [systolic, diastolic] = newRecord.value.split('/').map(Number);
         numericValue = systolic;
-        
-        // Simple BP status check
         if (systolic > 140 || diastolic > 90) status = 'warning';
         if (systolic > 180 || diastolic > 120) status = 'critical';
       } else {
         numericValue = parseFloat(newRecord.value.replace(/[^0-9.]/g, ''));
-        
-        // Simple status checks for other metrics
         if (newRecord.type === 'sugar') {
           if (numericValue > 140) status = 'warning';
           if (numericValue > 200) status = 'critical';
         } else if (newRecord.type === 'weight') {
-          status = 'stable'; // Weight is typically considered stable
+          status = 'stable';
         }
       }
 
@@ -143,7 +139,7 @@ const Health: React.FC = () => {
         timestamp: new Date(),
         status
       };
-      
+
       setHealthRecords(prev => [record, ...prev]);
       setNewRecord({ type: 'bp', value: '', numericValue: 0 });
       setShowAddForm(false);
@@ -153,18 +149,12 @@ const Health: React.FC = () => {
   const formatValue = (type: string, value: string): string => {
     const numValue = parseFloat(value.replace(/[^0-9.]/g, ''));
     switch (type) {
-      case 'bp':
-        return value.includes('/') ? value : `${value}/${Math.floor(numValue * 0.8)}`;
-      case 'sugar':
-        return `${numValue} ${t('healthUnits.mgdL')}`;
-      case 'weight':
-        return `${numValue} ${t('healthUnits.kg')}`;
-      case 'temperature':
-        return `${numValue} ${t('healthUnits.celsius')}`;
-      case 'oxygen':
-        return `${numValue}${t('healthUnits.percent')}`;
-      default:
-        return value;
+      case 'bp': return value.includes('/') ? value : `${value}/${Math.floor(numValue * 0.8)}`;
+      case 'sugar': return `${numValue} ${t('healthUnits.mgdL')}`;
+      case 'weight': return `${numValue} ${t('healthUnits.kg')}`;
+      case 'temperature': return `${numValue} ${t('healthUnits.celsius')}`;
+      case 'oxygen': return `${numValue}${t('healthUnits.percent')}`;
+      default: return value;
     }
   };
 
@@ -193,7 +183,6 @@ const Health: React.FC = () => {
     record.timestamp.toDateString() === new Date().toDateString()
   );
 
-  // Filter records based on selected time range
   const getFilteredRecords = () => {
     const now = new Date();
     let cutoffDate = new Date();
@@ -214,11 +203,20 @@ const Health: React.FC = () => {
     );
   };
 
-  // Prepare chart data
+  const predictNextValue = (): number | null => {
+    const records = getFilteredRecords()
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    const values = records.map(r => r.numericValue);
+    if (values.length < 2) return null;
+    const lastValues = values.slice(-3);
+    const predicted = lastValues.reduce((a, b) => a + b, 0) / lastValues.length;
+    return parseFloat(predicted.toFixed(2));
+  };
+
   const prepareChartData = () => {
     const filteredRecords = getFilteredRecords()
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-    
+
     const labels = filteredRecords.map(record => 
       record.timestamp.toLocaleDateString('en-US', { 
         month: 'short', 
@@ -227,9 +225,15 @@ const Health: React.FC = () => {
         minute: '2-digit'
       })
     );
-    
+
     const data = filteredRecords.map(record => record.numericValue);
-    
+
+    const prediction = predictNextValue();
+    if (prediction !== null) {
+      labels.push(t('healthChart.predictedNext'));
+      data.push(prediction);
+    }
+
     let borderColor, backgroundColor;
     switch (selectedMetric) {
       case 'bp':
@@ -256,7 +260,7 @@ const Health: React.FC = () => {
         borderColor = 'rgb(234, 88, 12)';
         backgroundColor = 'rgba(234, 88, 12, 0.2)';
     }
-    
+
     return {
       labels,
       datasets: [
@@ -266,7 +270,19 @@ const Health: React.FC = () => {
           borderColor,
           backgroundColor,
           tension: 0.1,
-          fill: true
+          fill: true,
+          pointBackgroundColor: (context: any) => {
+            if (context.dataIndex === data.length - 1 && prediction !== null) {
+              return 'rgba(255, 206, 86, 1)'; // Yellow for predicted point
+            }
+            return borderColor;
+          },
+          pointRadius: (context: any) => {
+            if (context.dataIndex === data.length - 1 && prediction !== null) {
+              return 6; // Larger point for prediction
+            }
+            return 3;
+          }
         }
       ]
     };
@@ -282,6 +298,16 @@ const Health: React.FC = () => {
         display: true,
         text: `${t(`healthMetrics.${selectedMetric}`)} ${t('healthChart.overTime')}`,
       },
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            if (context.dataIndex === context.dataset.data.length - 1 && predictNextValue() !== null) {
+              return `${context.dataset.label}: ${context.raw} (${t('healthChart.predicted')})`;
+            }
+            return `${context.dataset.label}: ${context.raw}`;
+          }
+        }
+      }
     },
     scales: {
       y: {
@@ -304,7 +330,6 @@ const Health: React.FC = () => {
         <p className="text-xl">{t('Welcome')}</p>
       </div>
 
-      {/* Health Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {['bp', 'sugar', 'weight'].map((metric) => {
           const latestRecord = healthRecords
@@ -348,7 +373,6 @@ const Health: React.FC = () => {
         </div>
       </div>
 
-      {/* Health Metrics Visualization */}
       <div className="bg-white rounded-2xl p-8 shadow-lg">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-bold text-gray-800">{t('healthTrends')}</h3>
@@ -407,6 +431,21 @@ const Health: React.FC = () => {
           </div>
         </div>
 
+        {predictNextValue() !== null && (
+          <div className="flex items-center space-x-4 bg-yellow-50 p-4 rounded-lg mb-6">
+            <Clock className="h-6 w-6 text-yellow-600" />
+            <div>
+              <p className="text-md text-gray-600">
+                <strong>{t('health.predictedNextValue')}:</strong> {predictNextValue()} {t(`healthUnits.${selectedMetric === 'bp' ? 'mmHg' : 
+                 selectedMetric === 'sugar' ? 'mgdL' : 
+                 selectedMetric === 'weight' ? 'kg' :
+                 selectedMetric === 'temperature' ? 'celsius' : 'percent'}`)}
+              </p>
+              <p className="text-sm text-yellow-700">{t('health.predictionBasedOn')} {timeRange} {t('health.predictionData')}</p>
+            </div>
+          </div>
+        )}
+
         <div className="h-80">
           {chartType === 'line' ? (
             <Line data={prepareChartData()} options={chartOptions} />
@@ -416,7 +455,6 @@ const Health: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Health Record Form */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-8 shadow-lg w-full max-w-md">
@@ -473,9 +511,8 @@ const Health: React.FC = () => {
         </div>
       )}
 
-      {/* Today's Readings */}
       <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('health.todaysReadings')}</h3>
+        <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('Todays Readings')}</h3>
         {todayRecords.length > 0 ? (
           <div className="space-y-4">
             {todayRecords.map((record) => {
@@ -522,7 +559,6 @@ const Health: React.FC = () => {
         )}
       </div>
 
-      {/* Health Tips */}
       <div className="bg-white rounded-2xl p-8 shadow-lg">
         <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('health.dailyHealthTips')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -535,7 +571,6 @@ const Health: React.FC = () => {
         </div>
       </div>
 
-      {/* Emergency Alert */}
       <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6">
         <div className="flex items-center space-x-4">
           <AlertTriangle className="h-8 w-8 text-red-600" />
@@ -549,4 +584,4 @@ const Health: React.FC = () => {
   );
 };
 
-export default Health; 
+export default Health;

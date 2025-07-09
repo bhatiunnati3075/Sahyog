@@ -13,7 +13,7 @@ i18n
     resources: {
       en: {
         translation: {
-          // Existing translations
+          // Navigation
           home: 'Home',
           reminders: 'Reminders',
           health: 'Health',
@@ -22,7 +22,10 @@ i18n
           techHelp: 'Tech Help',
           emergency: 'Emergency',
           family: 'Family',
+          caretaker: 'Caretaker', // New tab
           signOut: 'Sign Out',
+
+          // Common
           caringCompanion: 'Your Caring Companion',
           welcome: 'Namaste! 🙏',
           greeting: 'Good to see you today',
@@ -40,6 +43,60 @@ i18n
             evening: 'Good Evening'
           },
 
+          // Caretaker Section
+          caretakerDashboard: 'Caretaker Dashboard',
+          caretakerWelcome: 'Manage care for your loved one',
+          careSchedule: 'Care Schedule',
+          medications: 'Medications',
+          vitalsTracking: 'Vitals Tracking',
+          notes: 'Care Notes',
+          addNote: 'Add Note',
+          recentActivities: 'Recent Activities',
+          noActivities: 'No recent activities',
+          careTeam: 'Care Team',
+          addTeamMember: 'Add Team Member',
+          memberName: 'Name',
+          memberRole: 'Role',
+          memberContact: 'Contact',
+          relationOptions: {
+            family: 'Family',
+            nurse: 'Nurse',
+            doctor: 'Doctor',
+            helper: 'Helper',
+            other: 'Other'
+          },
+          careTasks: {
+            title: 'Care Tasks',
+            morning: 'Morning Routine',
+            afternoon: 'Afternoon Check',
+            evening: 'Evening Routine',
+            night: 'Night Check'
+          },
+          taskStatus: {
+            pending: 'Pending',
+            inProgress: 'In Progress',
+            completed: 'Completed',
+            skipped: 'Skipped'
+          },
+          careLog: {
+            title: 'Care Log',
+            date: 'Date',
+            time: 'Time',
+            activity: 'Activity',
+            notes: 'Notes',
+            addEntry: 'Add Log Entry'
+          },
+          medicationManagement: {
+            title: 'Medication Management',
+            addMedication: 'Add Medication',
+            medicineName: 'Medicine Name',
+            dosage: 'Dosage',
+            frequency: 'Frequency',
+            timing: 'Timing',
+            lastAdministered: 'Last Administered',
+            nextDue: 'Next Due'
+          },
+
           // Quick Actions
           todaysReminders: "Today's Reminders",
           remindersSubtitle: '{{count}} pending reminders',
@@ -53,6 +110,8 @@ i18n
           techAssistSubtitle: 'Calls, messages & devices',
           familyUpdates: 'Family Updates',
           familySubtitle: 'Connect with loved ones',
+          caretakerUpdates: 'Caretaker Notes', // New quick action
+          caretakerSubtitle: 'View latest care updates', // New quick action
 
           // Schedule items
           morningMedicine: 'Morning Medicine',
@@ -69,7 +128,7 @@ i18n
           addNewReminder: 'Add New Reminder',
           title: 'Title',
           whatToRemember: 'What to remember',
-          time: 'Time',
+          Time: 'Time',
           type: 'Type',
           medicine: 'Medicine',
           appointment: 'Appointment',
@@ -283,7 +342,7 @@ i18n
       },
       hi: {
         translation: {
-          // Existing Hindi translations
+          // Navigation
           home: 'होम',
           reminders: 'अनुस्मारक',
           health: 'स्वास्थ्य',
@@ -292,7 +351,10 @@ i18n
           techHelp: 'तकनीकी सहायता',
           emergency: 'आपातकाल',
           family: 'परिवार',
+          caretaker: 'देखभालकर्ता', // New tab in Hindi
           signOut: 'साइन आउट',
+
+          // Common
           caringCompanion: 'आपका सहायक साथी',
           welcome: 'नमस्ते! 🙏',
           greeting: 'आज आपको देखकर अच्छा लगा',
@@ -310,6 +372,60 @@ i18n
             evening: 'शुभ संध्या'
           },
 
+          // Caretaker Section (Hindi)
+          caretakerDashboard: 'देखभालकर्ता डैशबोर्ड',
+          caretakerWelcome: 'अपने प्रियजन की देखभाल प्रबंधित करें',
+          careSchedule: 'देखभाल कार्यक्रम',
+          medications: 'दवाएं',
+          vitalsTracking: 'महत्वपूर्ण संकेत ट्रैकिंग',
+          notes: 'देखभाल नोट्स',
+          addNote: 'नोट जोड़ें',
+          recentActivities: 'हाल की गतिविधियाँ',
+          noActivities: 'कोई हालिया गतिविधि नहीं',
+          careTeam: 'देखभाल टीम',
+          addTeamMember: 'टीम सदस्य जोड़ें',
+          memberName: 'नाम',
+          memberRole: 'भूमिका',
+          memberContact: 'संपर्क',
+          relationOptions: {
+            family: 'परिवार',
+            nurse: 'नर्स',
+            doctor: 'डॉक्टर',
+            helper: 'सहायक',
+            other: 'अन्य'
+          },
+          careTasks: {
+            title: 'देखभाल कार्य',
+            morning: 'सुबह की दिनचर्या',
+            afternoon: 'दोपहर की जांच',
+            evening: 'शाम की दिनचर्या',
+            night: 'रात की जांच'
+          },
+          taskStatus: {
+            pending: 'लंबित',
+            inProgress: 'प्रगति पर',
+            completed: 'पूर्ण',
+            skipped: 'छोड़ा गया'
+          },
+          careLog: {
+            title: 'देखभाल लॉग',
+            date: 'तारीख',
+            time: 'समय',
+            activity: 'गतिविधि',
+            notes: 'नोट्स',
+            addEntry: 'लॉग प्रविष्टि जोड़ें'
+          },
+          medicationManagement: {
+            title: 'दवा प्रबंधन',
+            addMedication: 'दवा जोड़ें',
+            medicineName: 'दवा का नाम',
+            dosage: 'खुराक',
+            frequency: 'आवृत्ति',
+            timing: 'समय',
+            lastAdministered: 'अंतिम बार दी गई',
+            nextDue: 'अगली बार देय'
+          },
+
           // Quick Actions
           todaysReminders: "आज के अनुस्मारक",
           remindersSubtitle: '{{count}} लंबित अनुस्मारक',
@@ -323,6 +439,8 @@ i18n
           techAssistSubtitle: 'कॉल, संदेश और उपकरण',
           familyUpdates: 'परिवार के समाचार',
           familySubtitle: 'प्रियजनों के साथ जुड़ें',
+          caretakerUpdates: 'देखभालकर्ता नोट्स', // New quick action in Hindi
+          caretakerSubtitle: 'नवीनतम देखभाल अपडेट देखें', // New quick action in Hindi
 
           // Schedule items
           morningMedicine: 'सुबह की दवा',

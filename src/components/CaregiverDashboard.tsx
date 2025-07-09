@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Users, 
   Activity, 
@@ -30,43 +31,44 @@ interface ActivityLog {
 }
 
 const CaregiverDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const [selectedTimeframe, setSelectedTimeframe] = useState('today');
 
   const healthMetrics: HealthMetric[] = [
-    { type: 'Blood Pressure', value: '120/80', timestamp: new Date(), status: 'normal' },
-    { type: 'Blood Sugar', value: '110 mg/dL', timestamp: new Date(Date.now() - 3600000), status: 'normal' },
-    { type: 'Weight', value: '68 kg', timestamp: new Date(Date.now() - 86400000), status: 'normal' },
-    { type: 'Heart Rate', value: '75 bpm', timestamp: new Date(Date.now() - 7200000), status: 'normal' }
+    { type: t('healthMetrics.bp'), value: '120/80', timestamp: new Date(), status: 'normal' },
+    { type: t('healthMetrics.sugar'), value: '110 mg/dL', timestamp: new Date(Date.now() - 3600000), status: 'normal' },
+    { type: t('healthMetrics.weight'), value: '68 kg', timestamp: new Date(Date.now() - 86400000), status: 'normal' },
+    { type: t('healthMetrics.heartRate'), value: '75 bpm', timestamp: new Date(Date.now() - 7200000), status: 'normal' }
   ];
 
   const activityLogs: ActivityLog[] = [
     {
       id: '1',
-      activity: 'Morning medication taken',
+      activity: t('morning Medication'),
       timestamp: new Date(Date.now() - 1800000),
       type: 'medication'
     },
     {
       id: '2',
-      activity: 'Blood pressure recorded: 120/80',
+      activity: t('blood Pressure', { value: '120/80' }),
       timestamp: new Date(Date.now() - 3600000),
       type: 'health'
     },
     {
       id: '3',
-      activity: 'Called Priya beta for 15 minutes',
+      activity: t('family Call', { name: 'Priya', duration: 15 }),
       timestamp: new Date(Date.now() - 7200000),
       type: 'social'
     },
     {
       id: '4',
-      activity: 'Completed daily walk',
+      activity: t('daily Walk'),
       timestamp: new Date(Date.now() - 10800000),
       type: 'health'
     },
     {
       id: '5',
-      activity: 'Emergency contact updated',
+      activity: t('emergency Contact Updated'),
       timestamp: new Date(Date.now() - 86400000),
       type: 'safety'
     }
@@ -75,22 +77,22 @@ const CaregiverDashboard: React.FC = () => {
   const alerts = [
     {
       id: '1',
-      message: 'Missed evening medication reminder',
+      message: t('missed Medication'),
       severity: 'warning',
       timestamp: new Date(Date.now() - 1800000)
     },
     {
       id: '2',
-      message: 'Doctor appointment tomorrow at 2 PM',
+      message: t('doctor Appointment', { time: '2 PM' }),
       severity: 'info',
       timestamp: new Date(Date.now() - 3600000)
     }
   ];
 
   const upcomingReminders = [
-    { time: '20:00', task: 'Evening medication', type: 'medication' },
-    { time: '21:00', task: 'Family video call', type: 'social' },
-    { time: '14:00 Tomorrow', task: 'Dr. Sharma appointment', type: 'health' }
+    { time: '20:00', task: t('evening Medication'), type: 'medication' },
+    { time: '21:00', task: t('family Call'), type: 'social' },
+    { time: t('tomorrow At', { time: '14:00' }), task: t('doctor Appointment', { name: 'Dr. Sharma' }), type: 'health' }
   ];
 
   const getActivityIcon = (type: string) => {
@@ -127,13 +129,13 @@ const CaregiverDashboard: React.FC = () => {
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-4xl font-bold mb-4">Family Dashboard</h2>
-            <p className="text-xl">Monitor your loved one's wellbeing and daily activities</p>
+            <h2 className="text-4xl font-bold mb-4">{t('caretaker.dashboard.title')}</h2>
+            <p className="text-xl">{t('caretaker.dashboard.subtitle')}</p>
           </div>
           <div className="hidden md:block">
             <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center">
               <Users className="h-16 w-16 text-white mx-auto mb-2" />
-              <p className="text-lg font-semibold">Connected</p>
+              <p className="text-lg font-semibold">{t('connected')}</p>
             </div>
           </div>
         </div>
@@ -148,7 +150,7 @@ const CaregiverDashboard: React.FC = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-800">5/6</h3>
-              <p className="text-gray-600">Reminders Completed</p>
+              <p className="text-gray-600">{t('reminders Completed')}</p>
             </div>
           </div>
         </div>
@@ -159,8 +161,8 @@ const CaregiverDashboard: React.FC = () => {
               <Activity className="h-8 w-8 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-800">Normal</h3>
-              <p className="text-gray-600">Health Status</p>
+              <h3 className="text-2xl font-bold text-gray-800">{t('healthStatus.normal')}</h3>
+              <p className="text-gray-600">{t('health Status')}</p>
             </div>
           </div>
         </div>
@@ -172,7 +174,7 @@ const CaregiverDashboard: React.FC = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-800">3</h3>
-              <p className="text-gray-600">Social Interactions</p>
+              <p className="text-gray-600">{t('Social Interactions')}</p>
             </div>
           </div>
         </div>
@@ -184,7 +186,7 @@ const CaregiverDashboard: React.FC = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-800">1</h3>
-              <p className="text-gray-600">Active Alerts</p>
+              <p className="text-gray-600">{t('Active Alerts')}</p>
             </div>
           </div>
         </div>
@@ -193,7 +195,7 @@ const CaregiverDashboard: React.FC = () => {
       {/* Alerts Section */}
       {alerts.length > 0 && (
         <div className="bg-white rounded-2xl p-8 shadow-lg">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">Active Alerts</h3>
+          <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('Alerts')}</h3>
           <div className="space-y-4">
             {alerts.map((alert) => (
               <div
@@ -206,12 +208,12 @@ const CaregiverDashboard: React.FC = () => {
                     <div>
                       <p className="text-lg font-semibold">{alert.message}</p>
                       <p className="text-sm opacity-75">
-                        {alert.timestamp.toLocaleString()}
+                        {t('time.lastUpdated', { time: alert.timestamp.toLocaleString() })}
                       </p>
                     </div>
                   </div>
                   <button className="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors duration-200">
-                    Dismiss
+                    {t('actions.dismiss')}
                   </button>
                 </div>
               </div>
@@ -222,7 +224,7 @@ const CaregiverDashboard: React.FC = () => {
 
       {/* Health Metrics */}
       <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">Latest Health Readings</h3>
+        <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('Health Readings')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {healthMetrics.map((metric, index) => (
             <div key={index} className="p-6 bg-gray-50 rounded-xl">
@@ -235,13 +237,13 @@ const CaregiverDashboard: React.FC = () => {
                     ? 'bg-yellow-100 text-yellow-700'
                     : 'bg-red-100 text-red-700'
                 }`}>
-                  {metric.status}
+                  {t(`healthStatus.${metric.status}`)}
                 </span>
               </div>
               <h4 className="text-lg font-semibold text-gray-800 mb-2">{metric.type}</h4>
               <p className="text-2xl font-bold text-gray-900 mb-2">{metric.value}</p>
               <p className="text-gray-500 text-sm">
-                {metric.timestamp.toLocaleString()}
+                {t('time.lastUpdated', { time: metric.timestamp.toLocaleString() })}
               </p>
             </div>
           ))}
@@ -252,15 +254,15 @@ const CaregiverDashboard: React.FC = () => {
         {/* Activity Timeline */}
         <div className="bg-white rounded-2xl p-8 shadow-lg">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-800">Recent Activity</h3>
+            <h3 className="text-2xl font-bold text-gray-800">{t('Title')}</h3>
             <select
               value={selectedTimeframe}
               onChange={(e) => setSelectedTimeframe(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
+              <option value="today">{t('today')}</option>
+              <option value="week">{t('thisWeek')}</option>
+              <option value="month">{t('thisMonth')}</option>
             </select>
           </div>
           
@@ -286,7 +288,7 @@ const CaregiverDashboard: React.FC = () => {
 
         {/* Upcoming Reminders */}
         <div className="bg-white rounded-2xl p-8 shadow-lg">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">Upcoming Reminders</h3>
+          <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('Title')}</h3>
           <div className="space-y-4">
             {upcomingReminders.map((reminder, index) => (
               <div key={index} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
@@ -304,7 +306,7 @@ const CaregiverDashboard: React.FC = () => {
                     ? 'bg-green-100 text-green-700'
                     : 'bg-purple-100 text-purple-700'
                 }`}>
-                  {reminder.type}
+                  {t(`caretaker.types.${reminder.type}`)}
                 </span>
               </div>
             ))}
@@ -317,22 +319,22 @@ const CaregiverDashboard: React.FC = () => {
         <div className="bg-white rounded-2xl p-8 shadow-lg">
           <div className="flex items-center space-x-3 mb-6">
             <Phone className="h-8 w-8 text-green-600" />
-            <h3 className="text-2xl font-bold text-gray-800">Quick Contact</h3>
+            <h3 className="text-2xl font-bold text-gray-800">{t('Title')}</h3>
           </div>
           <div className="space-y-4">
             <button className="w-full flex items-center space-x-4 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors duration-200">
               <Phone className="h-6 w-6 text-green-600" />
               <div className="text-left">
-                <p className="text-lg font-semibold text-gray-800">Call Mom/Dad</p>
-                <p className="text-gray-600">Direct call</p>
+                <p className="text-lg font-semibold text-gray-800">{t('Call')}</p>
+                <p className="text-gray-600">{t('DirectCall')}</p>
               </div>
             </button>
             
             <button className="w-full flex items-center space-x-4 p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors duration-200">
               <MessageSquare className="h-6 w-6 text-blue-600" />
               <div className="text-left">
-                <p className="text-lg font-semibold text-gray-800">Send Message</p>
-                <p className="text-gray-600">Quick message</p>
+                <p className="text-lg font-semibold text-gray-800">{t('SendMessage')}</p>
+                <p className="text-gray-600">{t('QuickMessage')}</p>
               </div>
             </button>
           </div>
@@ -341,19 +343,23 @@ const CaregiverDashboard: React.FC = () => {
         <div className="bg-white rounded-2xl p-8 shadow-lg">
           <div className="flex items-center space-x-3 mb-6">
             <MapPin className="h-8 w-8 text-blue-600" />
-            <h3 className="text-2xl font-bold text-gray-800">Location & Safety</h3>
+            <h3 className="text-2xl font-bold text-gray-800">{t('Title')}</h3>
           </div>
           <div className="space-y-4">
             <div className="p-4 bg-blue-50 rounded-xl">
-              <p className="text-lg font-semibold text-gray-800 mb-2">Current Location</p>
-              <p className="text-blue-700">Home - Safe</p>
-              <p className="text-gray-600 text-sm">Last updated: 2 minutes ago</p>
+              <p className="text-lg font-semibold text-gray-800 mb-2">{t('CurrentLocation')}</p>
+              <p className="text-blue-700">{t('HomeSafe')}</p>
+              <p className="text-gray-600 text-sm">
+                {t('time.lastUpdated', { time: t('time.minutesAgo', { count: 2 }) })}
+              </p>
             </div>
             
             <div className="p-4 bg-green-50 rounded-xl">
-              <p className="text-lg font-semibold text-gray-800 mb-2">Emergency Contacts</p>
-              <p className="text-green-700">All contacts active</p>
-              <p className="text-gray-600 text-sm">4 emergency contacts configured</p>
+              <p className="text-lg font-semibold text-gray-800 mb-2">{t('EmergencyContacts')}</p>
+              <p className="text-green-700">{t('AllContactsActive')}</p>
+              <p className="text-gray-600 text-sm">
+                {t('caretaker.location.contactsConfigured', { count: 4 })}
+              </p>
             </div>
           </div>
         </div>

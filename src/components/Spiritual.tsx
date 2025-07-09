@@ -1,420 +1,308 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Shield, 
-  Phone, 
-  Users, 
-  MapPin, 
-  AlertTriangle, 
-  Heart,
-  Siren,
-  Clock,
-  Check,
-  X,
-  Map
-} from 'lucide-react';
+import React, { useEffect } from 'react';
+import { FaOm, FaPlayCircle, FaPauseCircle } from 'react-icons/fa';
+import spiritualLogo from '../assets/spirituallogo.jpeg'; // Replace with your logo path
+import { motion, useAnimation } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
 
-interface EmergencyContact {
-  id: string;
-  name: string;
-  relation: string;
-  phone: string;
-  priority: 'high' | 'medium' | 'low';
-}
+type AudioItem = {
+  title: string;
+  src: string;
+  description: string;
+  duration?: string;
+};
 
-const Emergency: React.FC = () => {
-  const [emergencyActive, setEmergencyActive] = useState(false);
-  const [selectedEmergencyType, setSelectedEmergencyType] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [currentLocation, setCurrentLocation] = useState<string>('Getting location...');
-  const [locationError, setLocationError] = useState<string | null>(null);
+// Import audio files
+import ramRaksha from '../assets/Shree Ramraksha Stotra - (Raag.Fm).mp3';
+import hanumanChalisa from '../assets/Shri Hanuman Chalisa.mp3';
+import ganpatiAtharvashirsha from '../assets/Ganpati-Atharvashirsha.mp3';
 
-  const [emergencyContacts] = useState<EmergencyContact[]>([
-    {
-      id: '1',
-      name: 'Atharva Beta',
-      relation: 'Daughter',
-      phone: '+918668543491',
-      priority: 'high'
-    },
-    {
-      id: '2',
-      name: 'Rahul Beta',
-      relation: 'Son',
-      phone: '+918765432109',
-      priority: 'high'
-    },
-    {
-      id: '3',
-      name: 'Dr. Sharma',
-      relation: 'Family Doctor',
-      phone: '+919999911111',
-      priority: 'medium'
-    },
-    {
-      id: '4',
-      name: 'Geeta Neighbor',
-      relation: 'Neighbor',
-      phone: '+918888822222',
-      priority: 'medium'
-    }
-  ]);
+const spiritualContent: AudioItem[] = [
+  {
+    title: 'Shri Ram Raksha Stotra',
+    src: ramRaksha,
+    description: 'Powerful protective chant dedicated to Lord Rama',
+    duration: '12:45'
+  },
+  {
+    title: 'Hanuman Chalisa',
+    src: hanumanChalisa,
+    description: '40-verse devotional hymn to Lord Hanuman',
+    duration: '08:30'
+  },
+  {
+    title: 'Ganpati Atharvashirsha',
+    src: ganpatiAtharvashirsha,
+    description: 'Vedic hymn dedicated to Lord Ganesha',
+    duration: '15:20'
+  }
+];
 
-  const emergencyTypes = [
-    {
-      id: 'medical',
-      title: 'Medical Emergency',
-      description: 'Health issue, fall, injury',
-      icon: Heart,
-      color: 'bg-red-500',
-      number: '108'
-    },
-    {
-      id: 'police',
-      title: 'Security Emergency',
-      description: 'Safety concern, intruder',
-      icon: Shield,
-      color: 'bg-blue-500',
-      number: '100'
-    },
-    {
-      id: 'fire',
-      title: 'Fire Emergency',
-      description: 'Fire, gas leak, electrical',
-      icon: Siren,
-      color: 'bg-orange-500',
-      number: '101'
-    },
-    {
-      id: 'general',
-      title: 'General Help',
-      description: 'Need assistance',
-      icon: Users,
-      color: 'bg-purple-500',
-      number: 'family'
-    }
-  ];
+const Spiritual: React.FC = () => {
+  const [currentlyPlaying, setCurrentlyPlaying] = React.useState<number | null>(null);
+  const controls = useAnimation();
+  const [ref, inView] = useInView();
 
-  // Get user's current location
   useEffect(() => {
-    const getLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            // In a real app, you might reverse geocode these coordinates to get an address
-            setCurrentLocation(`Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`);
-          },
-          (_error) => {
-            setLocationError('Could not get location. Using default address.');
-            setCurrentLocation('123 Sample Street, City, State');
-          }
-        );
-      } else {
-        setLocationError('Geolocation is not supported by this browser.');
-        setCurrentLocation('123 Sample Street, City, State');
-      }
-    };
-
-    getLocation();
-  }, []);
-
-  const makePhoneCall = (number: string) => {
-    // Remove all non-digit characters
-    const cleanedNumber = number.replace(/\D/g, '');
-    window.open(`tel:${cleanedNumber}`, '_blank');
-  };
-
-  const sendSMS = (number: string, message: string) => {
-    const cleanedNumber = number.replace(/\D/g, '');
-    window.open(`sms:${cleanedNumber}?body=${encodeURIComponent(message)}`, '_blank');
-  };
-
-  const startEmergency = (type: string) => {
-    setSelectedEmergencyType(type);
-    setEmergencyActive(true);
-    setCountdown(10);
-
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev === null || prev <= 1) {
-          clearInterval(timer);
-          executeEmergency(type);
-          return null;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const cancelEmergency = () => {
-    setEmergencyActive(false);
-    setSelectedEmergencyType(null);
-    setCountdown(null);
-  };
-
-  const executeEmergency = (type: string) => {
-    const emergency = emergencyTypes.find(e => e.id === type);
-    if (!emergency) return;
-
-    const emergencyMessage = `EMERGENCY ALERT (${emergency.title})! Location: ${currentLocation}. Please help!`;
-
-    if (emergency.number === 'family') {
-      // Call and message all high priority contacts
-      emergencyContacts
-        .filter(c => c.priority === 'high')
-        .forEach(contact => {
-          makePhoneCall(contact.phone);
-          sendSMS(contact.phone, emergencyMessage);
-        });
-    } else {
-      // Call emergency number and notify family
-      makePhoneCall(emergency.number);
-      emergencyContacts
-        .filter(c => c.priority === 'high')
-        .forEach(contact => {
-          sendSMS(contact.phone, emergencyMessage);
-        });
+    if (inView) {
+      controls.start("visible");
     }
+  }, [controls, inView]);
 
-    setEmergencyActive(false);
-    setSelectedEmergencyType(null);
+  const togglePlay = (index: number) => {
+    const audioElements = document.getElementsByTagName('audio');
+    
+    // Pause all other audio elements
+    Array.from(audioElements).forEach((audio, i) => {
+      if (i !== index) {
+        audio.pause();
+      }
+    });
+
+    setCurrentlyPlaying(currentlyPlaying === index ? null : index);
   };
 
-  const quickEmergencyCall = (number: string, _name: string) => {
-    makePhoneCall(number);
+  // Animation variants
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'border-red-200 bg-red-50';
-      case 'medium': return 'border-yellow-200 bg-yellow-50';
-      case 'low': return 'border-gray-200 bg-gray-50';
-      default: return 'border-gray-200 bg-gray-50';
+
+  const floatingOm = {
+    animate: {
+      y: [0, -10, 0],
+      rotate: [0, 5, 0],
+      transition: {
+        duration: 8,
+        repeat: Infinity,
+        repeatType: "loop" as const,
+        ease: "easeInOut" as const
+      }
+    }
+  };
+
+  const floatingOmWave = (delay: number) => ({
+    y: [0, -10, 0],
+    transition: {
+      delay,
+      duration: 8,
+      repeat: Infinity,
+      repeatType: "loop" as const,
+      ease: "easeInOut" as const
+    }
+  });
+
+  const backgroundOmAnimation = {
+    y: [0, (Math.random() - 0.5) * 40],
+    x: [0, (Math.random() - 0.5) * 40],
+    rotate: [0, Math.random() * 360],
+    transition: {
+      duration: Math.random() * 20 + 10,
+      repeat: Infinity,
+      repeatType: "reverse" as const,
+      ease: "linear" as const
     }
   };
 
   return (
-    <div className="space-y-8 pb-20">
-      {/* Emergency Alert Modal */}
-      {emergencyActive && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl animate-pulse">
-            <div className="bg-red-100 p-6 rounded-full w-fit mx-auto mb-6">
-              <Siren className="h-16 w-16 text-red-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-red-600 mb-4">EMERGENCY ACTIVATED</h2>
-            <p className="text-xl text-gray-700 mb-6">
-              {selectedEmergencyType === 'medical' && 'Medical emergency services will be contacted'}
-              {selectedEmergencyType === 'police' && 'Police will be contacted'}
-              {selectedEmergencyType === 'fire' && 'Fire services will be contacted'}
-              {selectedEmergencyType === 'general' && 'Your family will be contacted'}
-            </p>
-            
-            {countdown && (
-              <div className="mb-6">
-                <div className="text-6xl font-bold text-red-600 mb-2">{countdown}</div>
-                <p className="text-lg text-gray-600">seconds remaining to cancel</p>
-              </div>
-            )}
-
-            <div className="flex space-x-4">
-              <button
-                onClick={cancelEmergency}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-xl font-bold py-4 rounded-lg transition-colors duration-200 flex flex-col items-center"
-              >
-                <X className="h-6 w-6 mb-1" />
-                Cancel
-              </button>
-              <button
-                onClick={() => executeEmergency(selectedEmergencyType!)}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xl font-bold py-4 rounded-lg transition-colors duration-200 flex flex-col items-center"
-              >
-                <Check className="h-6 w-6 mb-1" />
-                Confirm Now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl p-8 text-white">
-        <div className="flex items-center space-x-4">
-          <div className="bg-white/20 p-4 rounded-full">
-            <Shield className="h-12 w-12 text-white" />
-          </div>
-          <div>
-            <h2 className="text-4xl font-bold mb-2">Emergency Help</h2>
-            <p className="text-xl">Quick access to emergency services and contacts</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Emergency Types Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {emergencyTypes.map((type) => (
-          <button
-            key={type.id}
-            onClick={() => startEmergency(type.id)}
-            className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] text-left active:scale-95"
+    <div className="min-h-screen bg-gradient-to-b from-indigo-100 to-indigo-200 text-indigo-900 overflow-hidden">
+      {/* Floating Om symbols in background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute text-indigo-100 opacity-10"
+            style={{
+              fontSize: `${Math.random() * 50 + 30}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={backgroundOmAnimation}
           >
-            <div className="flex items-center space-x-6">
-              <div className={`${type.color} p-6 rounded-full`}>
-                <type.icon className="h-12 w-12 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">{type.title}</h3>
-                <p className="text-gray-600 text-lg mb-3">{type.description}</p>
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-5 w-5 text-gray-500" />
-                  <span className="text-gray-500 font-medium">
-                    {type.number === 'family' ? 'Contact Family' : `Call ${type.number}`}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </button>
+            <FaOm />
+          </motion.div>
         ))}
       </div>
 
-      {/* Emergency Contacts */}
-      <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">Emergency Contacts</h3>
-        <div className="space-y-4">
-          {emergencyContacts.map((contact) => (
-            <div
-              key={contact.id}
-              className={`flex items-center justify-between p-6 rounded-xl border-2 ${getPriorityColor(contact.priority)}`}
+      {/* Header with Logo */}
+      <motion.header 
+        className="py-8 px-6 text-center relative z-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="flex justify-center items-center mb-6">
+          <motion.img 
+            src={spiritualLogo} 
+            alt="Spiritual Logo" 
+            className="h-24 w-24 object-contain"
+            whileHover={{ scale: 1.05, rotate: 2 }}
+          />
+          <div className="ml-4">
+            <motion.h1 
+              className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-indigo-800"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 1 }}
             >
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h4 className="text-xl font-semibold text-gray-800">{contact.name}</h4>
-                  <p className="text-gray-600 text-lg">{contact.relation}</p>
-                  <p className="text-gray-500">{contact.phone}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  contact.priority === 'high' 
-                    ? 'bg-red-100 text-red-700' 
-                    : contact.priority === 'medium'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : 'bg-gray-100 text-gray-700'
-                }`}>
-                  {contact.priority} priority
-                </span>
-                <button
-                  onClick={() => quickEmergencyCall(contact.phone, contact.name)}
-                  className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full transition-colors duration-200"
-                  aria-label={`Call ${contact.name}`}
-                >
-                  <Phone className="h-6 w-6" />
-                </button>
-              </div>
+              Divine Chants
+            </motion.h1>
+            <motion.p 
+              className="text-indigo-600 mt-2 text-lg"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 1 }}
+            >
+              Elevate your consciousness through sacred sounds
+            </motion.p>
+          </div>
+        </div>
+        <motion.div 
+          className="w-24 h-1 bg-indigo-500 mx-auto rounded-full"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.7, duration: 0.8 }}
+        />
+      </motion.header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
+        {/* Introduction */}
+        <motion.div 
+          className="bg-indigo-50 rounded-2xl p-6 mb-12 border border-indigo-200 shadow-sm"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.9, duration: 0.6 }}
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex items-center">
+            <motion.div
+              variants={floatingOm}
+              animate="animate"
+            >
+              <FaOm className="text-indigo-600 text-4xl mr-4" />
+            </motion.div>
+            <div>
+              <h2 className="text-2xl font-semibold mb-2 text-indigo-800">Sacred Sound Journey</h2>
+              <p className="text-indigo-700">
+                Immerse yourself in these divine vibrations for peace, protection and spiritual awakening.
+                Listen with devotion and an open heart.
+              </p>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Audio Cards */}
+        <motion.div 
+          className="space-y-8"
+          variants={container}
+          initial="hidden"
+          animate="visible"
+          ref={ref}
+        >
+          {spiritualContent.map((item, index) => (
+            <motion.div 
+              key={index}
+              className={`bg-gradient-to-br rounded-2xl overflow-hidden transition-all duration-300 
+                ${currentlyPlaying === index ? 
+                  'from-indigo-400 to-indigo-500 shadow-lg shadow-indigo-500/20 text-white' : 
+                  'from-white to-indigo-50 hover:shadow-lg hover:shadow-indigo-200/50 text-indigo-800'}
+                border ${currentlyPlaying === index ? 'border-indigo-300' : 'border-indigo-100'}`}
+              variants={item}
+              whileHover={{ y: -3 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <div className="p-6">
+                <div className="flex items-start">
+                  <motion.button 
+                    onClick={() => togglePlay(index)}
+                    className={`flex-shrink-0 mr-6 text-4xl transition-colors ${
+                      currentlyPlaying === index ? 'text-white' : 'text-indigo-600 hover:text-indigo-800'
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    {currentlyPlaying === index ? <FaPauseCircle /> : <FaPlayCircle />}
+                  </motion.button>
+                  
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className={`text-2xl font-bold mb-1 ${
+                          currentlyPlaying === index ? 'text-white' : 'text-indigo-800'
+                        }`}>{item.title}</h3>
+                        <p className={`mb-3 ${
+                          currentlyPlaying === index ? 'text-indigo-100' : 'text-indigo-600'
+                        }`}>{item.description}</p>
+                      </div>
+                      {item.duration && (
+                        <motion.span 
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            currentlyPlaying === index ? 
+                            'bg-indigo-600 text-indigo-50' : 
+                            'bg-indigo-100 text-indigo-700'
+                          }`}
+                          initial={{ scale: 0.9 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 500 }}
+                        >
+                          {item.duration}
+                        </motion.span>
+                      )}
+                    </div>
+                    
+                    <audio
+                      controls
+                      className="w-full mt-4"
+                      onPlay={() => setCurrentlyPlaying(index)}
+                      onPause={() => currentlyPlaying === index && setCurrentlyPlaying(null)}
+                    >
+                      <source src={item.src} type="audio/mpeg" />
+                      Your browser does not support audio playback.
+                    </audio>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </main>
 
-      {/* Location & Medical Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl p-8 shadow-lg">
-          <div className="flex items-center space-x-3 mb-6">
-            <MapPin className="h-8 w-8 text-blue-600" />
-            <h3 className="text-2xl font-bold text-gray-800">Location Info</h3>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <p className="text-gray-600 text-lg">Your location will be automatically shared with emergency contacts.</p>
-              {locationError && (
-                <p className="text-red-500 text-sm mt-2">{locationError}</p>
-              )}
-            </div>
-            <div className="bg-blue-50 p-4 rounded-lg flex items-start space-x-3">
-              <Map className="h-5 w-5 text-blue-500 mt-1" />
-              <div>
-                <p className="text-blue-700 font-medium">Current Location:</p>
-                <p className="text-blue-600">{currentLocation}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-8 shadow-lg">
-          <div className="flex items-center space-x-3 mb-6">
-            <Heart className="h-8 w-8 text-red-600" />
-            <h3 className="text-2xl font-bold text-gray-800">Medical Info</h3>
-          </div>
-          <div className="space-y-4">
-            <div className="bg-red-50 p-4 rounded-lg flex items-start space-x-3">
-              <AlertTriangle className="h-5 w-5 text-red-500 mt-1" />
-              <div>
-                <p className="text-red-700 font-medium">Allergies:</p>
-                <p className="text-red-600">None reported</p>
-              </div>
-            </div>
-            <div className="bg-yellow-50 p-4 rounded-lg flex items-start space-x-3">
-              <Clock className="h-5 w-5 text-yellow-500 mt-1" />
-              <div>
-                <p className="text-yellow-700 font-medium">Medications:</p>
-                <p className="text-yellow-600">Blood pressure pills</p>
-              </div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg flex items-start space-x-3">
-              <Heart className="h-5 w-5 text-green-500 mt-1" />
-              <div>
-                <p className="text-green-700 font-medium">Blood Type:</p>
-                <p className="text-green-600">B+</p>
-              </div>
-            </div>
+      {/* Footer */}
+      <motion.footer 
+        className="py-8 text-center text-indigo-500 text-sm mt-12 relative z-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+      >
+        <div className="container mx-auto px-4">
+          <p>May these sacred sounds bring you peace and enlightenment</p>
+          <div className="flex justify-center space-x-4 mt-4">
+            <motion.div
+              animate={floatingOmWave(0)}
+            >
+              <FaOm className="text-indigo-600" />
+            </motion.div>
+            <motion.div
+              animate={floatingOmWave(0.5)}
+            >
+              <FaOm className="text-indigo-600" />
+            </motion.div>
+            <motion.div
+              animate={floatingOmWave(1)}
+            >
+              <FaOm className="text-indigo-600" />
+            </motion.div>
           </div>
         </div>
-      </div>
-
-      {/* Important Numbers */}
-      <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">Important Emergency Numbers</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button 
-            onClick={() => makePhoneCall('108')}
-            className="flex items-center space-x-4 p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-colors text-left"
-          >
-            <Heart className="h-8 w-8 text-red-600" />
-            <div>
-              <p className="text-lg font-semibold text-gray-800">Medical Emergency</p>
-              <p className="text-2xl font-bold text-red-600">108</p>
-            </div>
-          </button>
-          
-          <button 
-            onClick={() => makePhoneCall('100')}
-            className="flex items-center space-x-4 p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left"
-          >
-            <Shield className="h-8 w-8 text-blue-600" />
-            <div>
-              <p className="text-lg font-semibold text-gray-800">Police</p>
-              <p className="text-2xl font-bold text-blue-600">100</p>
-            </div>
-          </button>
-          
-          <button 
-            onClick={() => makePhoneCall('101')}
-            className="flex items-center space-x-4 p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors text-left"
-          >
-            <Siren className="h-8 w-8 text-orange-600" />
-            <div>
-              <p className="text-lg font-semibold text-gray-800">Fire Department</p>
-              <p className="text-2xl font-bold text-orange-600">101</p>
-            </div>
-          </button>
-        </div>
-      </div>
+      </motion.footer>
     </div>
   );
 };
 
-export default Emergency;
+export default Spiritual;
