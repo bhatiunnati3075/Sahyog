@@ -22,7 +22,7 @@ const songs: Song[] = [
     artist: 'Lata Mangeshkar', 
     album: 'Woh Kaun Thi', 
     year: '1964',
-    audioSrc: '/assets/Lag Ja Gale (Arijit Singh Version) - 320Kbps-(Mr-Jat.in).mp3'
+    audioSrc: '/assets/me.mp3'
   },
   { 
     id: '2', 
