@@ -9,19 +9,23 @@ import Health from './components/Health';
 import Entertainment from './components/Entertainment';
 import Companionship from './components/Companionship';
 import TechAssist from './components/TechAssist';
-import Spiritual from './components/Spiritual'; 
+import Spiritual from './components/Spiritual';
 import CaregiverDashboard from './components/CaregiverDashboard';
 import Login from './components/login';
 import Register from './components/registration';
+import VoiceInterface from './components/VoiceInterface';
 import logo from './assets/couple.png';
+import { CommonComponentProps } from './types';
 
-function App() {
+const App = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [splashVisible, setSplashVisible] = useState(true);
   const [showRegister, setShowRegister] = useState(false);
+  const [voiceCommand, setVoiceCommand] = useState('');
 
+  // Authentication state observer
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -30,6 +34,7 @@ function App() {
     return () => unsubscribe();
   }, []);
 
+  // Splash screen timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setSplashVisible(false);
@@ -37,20 +42,53 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  const renderActiveSection = () => {
-    switch (activeSection) {
-      case 'dashboard': return <Dashboard onSectionChange={setActiveSection} />;
-      case 'reminders': return <Reminders />;
-      case 'health': return <Health />;
-      case 'entertainment': return <Entertainment />;
-      case 'companionship': return <Companionship />;
-      case 'tech-assist': return <TechAssist />;
-      case 'spiritual': return <Spiritual />; // Updated case
-      case 'caregiver': return <CaregiverDashboard />;
-      default: return <Dashboard onSectionChange={setActiveSection} />;
+  // Voice command handler
+  const handleVoiceCommand = (command: string) => {
+    setVoiceCommand(command);
+    const normalizedCommand = command.toLowerCase().trim();
+    
+    const commandMap: Record<string, string> = {
+      'dashboard|home': 'dashboard',
+      'remind|reminder': 'reminders',
+      'health|medical': 'health',
+      'entertain|fun': 'entertainment',
+      'companion|friend': 'companionship',
+      'tech|help': 'tech-assist',
+      'spiritual|prayer': 'spiritual',
+      'caregiver|helper': 'caregiver'
+    };
+
+    for (const [keywords, section] of Object.entries(commandMap)) {
+      if (new RegExp(keywords).test(normalizedCommand)) {
+        setActiveSection(section);
+        break;
+      }
     }
   };
 
+  // Render the active section
+  const renderActiveSection = () => {
+    const commonProps: CommonComponentProps = {
+      voiceCommand,
+      onSectionChange: setActiveSection
+    };
+
+    const sectionComponents: Record<string, React.FC<CommonComponentProps>> = {
+      'dashboard': Dashboard,
+      'reminders': Reminders,
+      'health': Health,
+      'entertainment': Entertainment,
+      'companionship': Companionship,
+      'tech-assist': TechAssist,
+      'spiritual': Spiritual,
+      'caregiver': CaregiverDashboard
+    };
+
+    const SectionComponent = sectionComponents[activeSection] || Dashboard;
+    return <SectionComponent {...commonProps} />;
+  };
+
+  // Splash screen render
   if (authLoading || splashVisible) {
     return (
       <AnimatePresence>
@@ -82,6 +120,7 @@ function App() {
     );
   }
 
+  // Auth screens render
   if (!user) {
     return (
       <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-orange-50">
@@ -94,6 +133,7 @@ function App() {
     );
   }
 
+  // Main app render
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50">
       <Header 
@@ -104,8 +144,9 @@ function App() {
       <main className="container mx-auto px-4 py-6 max-w-7xl">
         {renderActiveSection()}
       </main>
+      <VoiceInterface onVoiceCommand={handleVoiceCommand} />
     </div>
   );
-}
+};
 
 export default App;

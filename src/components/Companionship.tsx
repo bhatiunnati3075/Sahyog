@@ -9,13 +9,8 @@ import {
   Moon,
   MessageCircle,
   Sparkles,
-  Flower,
-  Star,
-  BookOpen,
-  Cloud,
-  Users,
-  Calendar,
-  Clock
+  Users
+  
 } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { motion, AnimatePresence } from 'framer-motion';

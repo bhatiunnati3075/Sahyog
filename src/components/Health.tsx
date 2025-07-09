@@ -436,7 +436,7 @@ const Health: React.FC = () => {
             <Clock className="h-6 w-6 text-yellow-600" />
             <div>
               <p className="text-md text-gray-600">
-                <strong>{t('health.predictedNextValue')}:</strong> {predictNextValue()} {t(`healthUnits.${selectedMetric === 'bp' ? 'mmHg' : 
+                <strong>{t('Sahyog predicted Next Value')}:</strong> {predictNextValue()} {t(`healthUnits.${selectedMetric === 'bp' ? 'mmHg' : 
                  selectedMetric === 'sugar' ? 'mgdL' : 
                  selectedMetric === 'weight' ? 'kg' :
                  selectedMetric === 'temperature' ? 'celsius' : 'percent'}`)}
@@ -560,7 +560,7 @@ const Health: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('health.dailyHealthTips')}</h3>
+        <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('DailyHealthTips')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.values(t('healthTips', { returnObjects: true })).map((tip: string, index: number) => (
             <div key={index} className="flex items-start space-x-3 p-4 bg-green-50 rounded-lg">
@@ -575,7 +575,7 @@ const Health: React.FC = () => {
         <div className="flex items-center space-x-4">
           <AlertTriangle className="h-8 w-8 text-red-600" />
           <div>
-            <h3 className="text-xl font-bold text-red-700">{t('health.healthEmergency')}</h3>
+            <h3 className="text-xl font-bold text-red-700">{t('Health Emergency')}</h3>
             <p className="text-red-600 text-lg">{t('healthEmergencyText')}</p>
           </div>
         </div>
@@ -584,4 +584,4 @@ const Health: React.FC = () => {
   );
 };
 
-export default Health;
+export default Health; 
