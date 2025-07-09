@@ -1,135 +1,179 @@
-import React, { useState } from 'react';
-import { 
-  Music, 
-  BookOpen, 
-  Radio, 
-  Gamepad2, 
-  Newspaper, 
-  Heart,
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Music,
+  BookOpen,
+  Gamepad2,
+  Newspaper,
   Play,
   Pause,
-  SkipForward,
-  Volume2,
   Smile,
-  Users,
-  Star
+  RefreshCw,
 } from 'lucide-react';
+import axios from 'axios';
 
 const Entertainment: React.FC = () => {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('stories');
+  const [news, setNews] = useState<any[]>([]);
+  const [displayJokes, setDisplayJokes] = useState<string[]>([]);
+  const [isLoadingNews, setIsLoadingNews] = useState(false);
+  const [newsCategory, setNewsCategory] = useState('general');
+  const [lastNewsUpdate, setLastNewsUpdate] = useState<string>('');
+  const newsRefreshInterval = useRef<NodeJS.Timeout>();
 
+  // Jokes database
+  const allJokes = [
+    'टीचर: सुबह जल्दी उठने के क्या फायदे हैं?\nबच्चा: जी नींद पूरी हो जाती है।',
+    'पत्नी: सुनिए जी, अगर मैं खो जाऊं तो आप क्या करेंगे?\nपति: अखबार में इश्तिहार दूंगा।\nपत्नी: क्या लिखेंगे?\nपति: जो खोया है वही पाएगा, कृपया वापस न करें।',
+    'पप्पू: डॉक्टर साहब, भूलने की बीमारी हो गई है।\nडॉक्टर: कब से?\nपप्पू: कब से क्या?',
+    'गोलू: मम्मी, मुझे स्कूल नहीं जाना।\nमम्मी: क्यों बेटा?\nगोलू: आज छुट्टी है।',
+    'पति: चाय में शक्कर नहीं है।\nपत्नी: मुस्कुराकर पी लो, मीठी लगने लगेगी।',
+    'बेटा: मम्मी, आपने मेरा टिफिन क्यों नहीं दिया?\nमम्मी: बेटा, आज तो रविवार है।',
+    'राजू: पापा, आप क्या करते हैं?\nपापा: बेटा, मैं वही करता हूं जो मम्मी कहती है।',
+    'टीचर: एक समझदार व्यक्ति कौन होता है?\nछात्र: जो पत्नी के सामने चुप रहना जानता है।',
+    'दादी: पहले हमारे ज़माने में मोबाइल नहीं था।\nपोता: दादी, तब आप लोग कैसे झगड़ा करते थे?',
+    'पंडित जी: विवाह जीवन का दूसरा जन्म है।\nदूल्हा: पहला जन्म क्या जेल था?',
+  ];
+
+  // Content databases
   const stories = [
-    {
-      id: '1',
-      title: 'The Wise Old Banyan Tree',
-      description: 'A heartwarming tale from the village',
-      duration: '15 min',
-      category: 'Folk Tales'
-    },
-    {
-      id: '2',
-      title: 'Birbal Ki Khichdi',
-      description: 'A clever story from Akbar-Birbal',
-      duration: '12 min',
-      category: 'Classic'
-    },
-    {
-      id: '3',
-      title: 'The Golden Mangoes',
-      description: 'A moral story about kindness',
-      duration: '18 min',
-      category: 'Moral Stories'
-    }
+    { id: '1', title: 'The Wise Old Banyan Tree', description: 'A heartwarming tale from the village', duration: '15 min', category: 'Folk Tales' },
+    { id: '2', title: 'Birbal Ki Khichdi', description: 'A clever story from Akbar-Birbal', duration: '12 min', category: 'Classic' },
+    { id: '3', title: 'The Golden Mangoes', description: 'A moral story about kindness', duration: '18 min', category: 'Moral Stories' },
   ];
 
   const songs = [
-    {
-      id: '1',
-      title: 'Lag Ja Gale',
-      artist: 'Lata Mangeshkar',
-      album: 'Woh Kaun Thi',
-      year: '1964'
-    },
-    {
-      id: '2',
-      title: 'Pyar Kiya To Darna Kya',
-      artist: 'Lata Mangeshkar',
-      album: 'Mughal-E-Azam',
-      year: '1960'
-    },
-    {
-      id: '3',
-      title: 'Ae Mere Watan Ke Logo',
-      artist: 'Lata Mangeshkar',
-      album: 'Patriotic',
-      year: '1963'
-    }
+    { id: '1', title: 'Lag Ja Gale', artist: 'Lata Mangeshkar', album: 'Woh Kaun Thi', year: '1964' },
+    { id: '2', title: 'Pyar Kiya To Darna Kya', artist: 'Lata Mangeshkar', album: 'Mughal-E-Azam', year: '1960' },
+    { id: '3', title: 'Ae Mere Watan Ke Logo', artist: 'Lata Mangeshkar', album: 'Patriotic', year: '1963' },
   ];
 
   const games = [
-    {
-      id: '1',
-      title: 'Memory Cards',
-      description: 'Match pairs to improve memory',
-      difficulty: 'Easy'
-    },
-    {
-      id: '2',
-      title: 'Word Search',
-      description: 'Find hidden words in the grid',
-      difficulty: 'Medium'
-    },
-    {
-      id: '3',
-      title: 'Number Puzzle',
-      description: 'Simple number puzzles',
-      difficulty: 'Easy'
+    { id: '1', title: 'Memory Cards', description: 'Match pairs to improve memory', difficulty: 'Easy' },
+    { id: '2', title: 'Word Search', description: 'Find hidden words in the grid', difficulty: 'Medium' },
+    { id: '3', title: 'Number Puzzle', description: 'Simple number puzzles', difficulty: 'Easy' },
+  ];
+
+  const newsCategories = [
+    { id: 'general', label: 'General' },
+    { id: 'business', label: 'Business' },
+    { id: 'technology', label: 'Tech' },
+    { id: 'health', label: 'Health' },
+    { id: 'entertainment', label: 'Entertainment' },
+    { id: 'sports', label: 'Sports' },
+  ];
+
+  const entertainmentCategories = [
+    { id: 'stories', label: 'Stories', icon: BookOpen },
+    { id: 'music', label: 'Music', icon: Music },
+    { id: 'games', label: 'Games', icon: Gamepad2 },
+    { id: 'jokes', label: 'Jokes', icon: Smile },
+    { id: 'news', label: 'News', icon: Newspaper },
+  ];
+
+  // Fetch news from API
+  const fetchNews = async () => {
+    try {
+      setIsLoadingNews(true);
+      
+      // Try primary news source (NewsAPI)
+      try {
+        const res = await axios.get(
+          `https://newsapi.org/v2/top-headlines?country=in&category=${newsCategory}&pageSize=5`,
+          {
+            headers: {
+              'X-Api-Key': 'a9e1eba32f49437aa669a50c07071bd3'
+            }
+          }
+        );
+        
+        if (res.data?.articles?.length) {
+          setNews(res.data.articles);
+          setLastNewsUpdate(new Date().toLocaleTimeString());
+          return;
+        }
+      } catch (primaryError) {
+        console.log('Primary news API failed, trying fallback');
+      }
+      
+      // Fallback to NewsData.io
+      try {
+        const fallbackRes = await axios.get(
+          `https://newsdata.io/api/1/news?apikey=pub_5c2a1e656ed24feb8edcf033eeb9c019&country=in&language=en&category=${newsCategory}`
+        );
+        setNews(fallbackRes.data.results.slice(0, 5));
+        setLastNewsUpdate(new Date().toLocaleTimeString());
+      } catch (fallbackError) {
+        console.error('Both news APIs failed:', fallbackError);
+        // If both APIs fail, show cached news if available
+        if (news.length === 0) {
+          setNews([{
+            title: 'Could not load latest news. Please try again later.',
+            url: '#',
+            publishedAt: new Date().toISOString(),
+            description: 'There was an error fetching the latest news updates.'
+          }]);
+        }
+      }
+    } finally {
+      setIsLoadingNews(false);
     }
-  ];
-
-  const jokes = [
-    "बेटा ने पापा से पूछा: 'पापा, मम्मी कहाँ है?'\nपापा: 'मार्केट गई है।'\nबेटा: 'अच्छा तो अब हम पार्टी कर सकते हैं!'",
-    
-    "डॉक्टर: 'आपको रोज़ाना टहलना चाहिए।'\nमरीज़: 'डॉक्टर साहब, मैं तो रोज़ बीवी के पीछे भागता हूँ!'\nडॉक्टर: 'वो तो ठीक है, लेकिन कभी पकड़ना भी चाहिए!'",
-    
-    "पत्नी: 'आज खाना बहुत स्वादिष्ट बना है ना?'\nपति: 'हाँ, आज तुमने कम नमक डाला है।'"
-  ];
-
-  const togglePlay = (id: string) => {
-    setCurrentlyPlaying(currentlyPlaying === id ? null : id);
   };
 
+  // Set up auto-refresh for news
+  useEffect(() => {
+    if (selectedCategory === 'news') {
+      fetchNews(); // Initial fetch
+      
+      // Refresh every 5 minutes (300000 ms)
+      newsRefreshInterval.current = setInterval(fetchNews, 300000);
+      
+      return () => {
+        if (newsRefreshInterval.current) {
+          clearInterval(newsRefreshInterval.current);
+        }
+      };
+    }
+  }, [selectedCategory, newsCategory]);
+
+  // Change jokes randomly
+  const changeJokes = () => {
+    const shuffled = [...allJokes].sort(() => 0.5 - Math.random());
+    setDisplayJokes(shuffled.slice(0, 4));
+  };
+
+  // Initialize jokes when jokes category is selected
+  useEffect(() => {
+    if (selectedCategory === 'jokes') {
+      changeJokes();
+    }
+  }, [selectedCategory]);
+
+  // Text-to-speech for jokes
+  const speakJoke = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'hi-IN';
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Render different content sections
   const renderStories = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {stories.map((story) => (
-        <div key={story.id} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-          <div className="flex items-start space-x-4">
-            <div className="bg-purple-100 p-3 rounded-full">
-              <BookOpen className="h-8 w-8 text-purple-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-xl font-bold text-gray-800 mb-2">{story.title}</h4>
-              <p className="text-gray-600 text-lg mb-3">{story.description}</p>
-              <div className="flex items-center space-x-4 mb-4">
-                <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">
-                  {story.category}
-                </span>
-                <span className="text-gray-500 text-sm">{story.duration}</span>
-              </div>
-              <button
-                onClick={() => togglePlay(story.id)}
-                className="flex items-center space-x-2 bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg transition-colors duration-200"
-              >
-                {currentlyPlaying === story.id ? (
-                  <Pause className="h-5 w-5" />
-                ) : (
-                  <Play className="h-5 w-5" />
-                )}
-                <span>{currentlyPlaying === story.id ? 'Pause' : 'Listen'}</span>
-              </button>
-            </div>
-          </div>
+        <div key={story.id} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+          <h4 className="text-xl font-bold text-gray-800 mb-2">{story.title}</h4>
+          <p className="text-gray-600 text-lg mb-2">{story.description}</p>
+          <div className="text-sm text-gray-500 mb-4">{story.duration} • {story.category}</div>
+          <button 
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
+            onClick={() => {
+              const utterance = new SpeechSynthesisUtterance(`${story.title}. ${story.description}`);
+              window.speechSynthesis.speak(utterance);
+            }}
+          >
+            Listen to Story
+          </button>
         </div>
       ))}
     </div>
@@ -137,173 +181,204 @@ const Entertainment: React.FC = () => {
 
   const renderMusic = () => (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">Classic Hindi Songs</h3>
-        <div className="space-y-4">
-          {songs.map((song) => (
-            <div key={song.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
-              <button
-                onClick={() => togglePlay(song.id)}
-                className="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-full transition-colors duration-200"
-              >
-                {currentlyPlaying === song.id ? (
-                  <Pause className="h-6 w-6" />
-                ) : (
-                  <Play className="h-6 w-6" />
-                )}
-              </button>
-              
-              <div className="flex-1">
-                <h4 className="text-lg font-semibold text-gray-800">{song.title}</h4>
-                <p className="text-gray-600">{song.artist} • {song.album} ({song.year})</p>
-              </div>
-
-              <div className="flex space-x-2">
-                <button className="p-2 text-gray-400 hover:text-gray-600">
-                  <Heart className="h-5 w-5" />
-                </button>
-                <button className="p-2 text-gray-400 hover:text-gray-600">
-                  <Volume2 className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          ))}
+      {songs.map((song) => (
+        <div key={song.id} className="flex items-center space-x-4 bg-white rounded-xl p-4 shadow hover:shadow-md transition-shadow">
+          <button 
+            onClick={() => setCurrentlyPlaying(currentlyPlaying === song.id ? null : song.id)} 
+            className="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-full transition-colors"
+          >
+            {currentlyPlaying === song.id ? <Pause size={20} /> : <Play size={20} />}
+          </button>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-lg truncate">{song.title}</h4>
+            <p className="text-sm text-gray-600 truncate">{song.artist} • {song.album} ({song.year})</p>
+          </div>
         </div>
-      </div>
-
-      <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">Radio Stations</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {['AIR FM Gold', 'Radio Mirchi Purani Jeans', 'Vividh Bharati', 'FM Rainbow'].map((station, index) => (
-            <button
-              key={index}
-              className="flex items-center space-x-3 p-4 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors duration-200"
-            >
-              <Radio className="h-6 w-6 text-orange-500" />
-              <span className="text-lg font-medium text-gray-800">{station}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      ))}
     </div>
   );
 
   const renderGames = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {games.map((game) => (
-        <div key={game.id} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="bg-green-100 p-3 rounded-full">
-              <Gamepad2 className="h-8 w-8 text-green-600" />
-            </div>
-            <div>
-              <h4 className="text-xl font-bold text-gray-800">{game.title}</h4>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                game.difficulty === 'Easy' 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-yellow-100 text-yellow-700'
-              }`}>
-                {game.difficulty}
-              </span>
-            </div>
+        <div key={game.id} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+          <h4 className="text-xl font-bold mb-2">{game.title}</h4>
+          <p className="text-gray-600 mb-4">{game.description}</p>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">Difficulty: {game.difficulty}</span>
+            <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
+              Play
+            </button>
           </div>
-          <p className="text-gray-600 text-lg mb-4">{game.description}</p>
-          <button className="w-full bg-green-500 hover:bg-green-600 text-white text-lg font-medium py-3 rounded-lg transition-colors duration-200">
-            Play Now
-          </button>
         </div>
       ))}
     </div>
   );
 
   const renderJokes = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {jokes.map((joke, index) => (
-        <div key={index} className="bg-white rounded-2xl p-6 shadow-lg">
-          <div className="flex items-start space-x-4">
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <Smile className="h-8 w-8 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-lg text-gray-700 leading-relaxed whitespace-pre-line">{joke}</p>
-              <button className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
-                😄 Funny!
-              </button>
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <button 
+          onClick={changeJokes}
+          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <RefreshCw size={18} />
+          Get New Jokes
+        </button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {displayJokes.map((joke, index) => (
+          <div key={index} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-start space-x-4">
+              <div className="bg-yellow-100 p-3 rounded-full flex-shrink-0">
+                <Smile size={24} className="text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-lg text-gray-700 whitespace-pre-line mb-4">{joke}</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => speakJoke(joke)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    🔊 Hear Joke
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(joke);
+                    }}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 
-  const categories = [
-    { id: 'stories', label: 'Stories', icon: BookOpen },
-    { id: 'music', label: 'Music', icon: Music },
-    { id: 'games', label: 'Games', icon: Gamepad2 },
-    { id: 'jokes', label: 'Jokes', icon: Smile }
-  ];
-
-  return (
-    <div className="space-y-8">
-      <div className="bg-gradient-to-r from-purple-600 to-orange-500 rounded-2xl p-8 text-white">
-        <h2 className="text-4xl font-bold mb-4">Entertainment Center</h2>
-        <p className="text-xl">Stories, music, games, and laughter await you!</p>
-      </div>
-
-      {/* Category Selection */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {categories.map(({ id, label, icon: Icon }) => (
+  const renderNews = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white p-4 rounded-xl shadow">
+        <div className="flex flex-wrap gap-2">
+          {newsCategories.map(({ id, label }) => (
             <button
               key={id}
-              onClick={() => setSelectedCategory(id)}
-              className={`flex flex-col items-center p-6 rounded-xl transition-all duration-200 ${
-                selectedCategory === id
-                  ? 'bg-purple-100 text-purple-700 shadow-md'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+              onClick={() => setNewsCategory(id)}
+              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                newsCategory === id 
+                  ? 'bg-purple-500 text-white' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              <Icon className="h-12 w-12 mb-3" />
-              <span className="text-lg font-semibold">{label}</span>
+              {label}
             </button>
           ))}
         </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-500">
+            Last updated: {lastNewsUpdate || 'Never'}
+          </span>
+          <button 
+            onClick={fetchNews}
+            disabled={isLoadingNews}
+            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-blue-400 transition-colors"
+          >
+            <RefreshCw size={18} className={`${isLoadingNews ? 'animate-spin' : ''}`} />
+            {isLoadingNews ? 'Loading...' : 'Refresh News'}
+          </button>
+        </div>
+      </div>
+      
+      <div className="bg-white rounded-2xl p-6 shadow-lg">
+        {isLoadingNews ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {news.length > 0 ? (
+              news.map((article, idx) => (
+                <div key={idx} className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
+                  <a 
+                    href={article.url || '#'} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="block hover:bg-gray-50 p-3 rounded-lg transition"
+                  >
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-1">{article.title}</h3>
+                        <p className="text-gray-600 mb-2">{article.description}</p>
+                        <div className="text-sm text-gray-500">
+                          {article.source?.name || 'Unknown source'} • {new Date(article.publishedAt).toLocaleString()}
+                        </div>
+                      </div>
+                      {article.urlToImage && (
+                        <div className="w-full md:w-32 h-32 bg-gray-200 rounded-md overflow-hidden flex-shrink-0">
+                          <img 
+                            src={article.urlToImage} 
+                            alt={article.title} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </a>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No news articles found. Please try refreshing.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-8 max-w-6xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-purple-600 to-orange-500 rounded-2xl p-8 text-white shadow-xl">
+        <h2 className="text-4xl font-bold mb-2">Entertainment Center</h2>
+        <p className="text-xl opacity-90">Fun stories, music, games, and more for joy and relaxation!</p>
+      </div>
+
+      {/* Category Selector */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 bg-white rounded-2xl p-6 shadow-lg">
+        {entertainmentCategories.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setSelectedCategory(id)}
+            className={`flex flex-col items-center p-4 rounded-xl transition-all ${
+              selectedCategory === id 
+                ? 'bg-purple-100 text-purple-700 shadow-md transform scale-[1.02]' 
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <Icon size={32} className="mb-2" />
+            <span className="text-base font-medium">{label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Content Area */}
-      <div>
+      <div className="bg-white rounded-2xl p-6 shadow-lg">
         {selectedCategory === 'stories' && renderStories()}
         {selectedCategory === 'music' && renderMusic()}
         {selectedCategory === 'games' && renderGames()}
         {selectedCategory === 'jokes' && renderJokes()}
+        {selectedCategory === 'news' && renderNews()}
       </div>
-
-      {/* Now Playing Bar */}
-      {currentlyPlaying && (
-        <div className="fixed bottom-24 left-6 right-6 bg-white rounded-2xl p-4 shadow-2xl border-2 border-purple-200">
-          <div className="flex items-center space-x-4">
-            <div className="bg-purple-100 p-2 rounded-full">
-              <Music className="h-6 w-6 text-purple-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-lg font-semibold text-gray-800">Now Playing</p>
-              <p className="text-gray-600">Content ID: {currentlyPlaying}</p>
-            </div>
-            <div className="flex space-x-2">
-              <button className="p-2 text-gray-600 hover:text-purple-600">
-                <SkipForward className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setCurrentlyPlaying(null)}
-                className="p-2 text-gray-600 hover:text-red-600"
-              >
-                <Pause className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
-export default Entertainment
+
+export default Entertainment;
