@@ -1,64 +1,42 @@
 import React from 'react';
-import { Home, Bell, Activity, Music, MessageCircle, Phone, Shield, Users, LogOut } from 'lucide-react';
-import coupleImage from '../assets/couple.png'; 
+import { useTranslation } from 'react-i18next';
+import {
+  Home,
+  Bell,
+  Activity,
+  Music,
+  MessageCircle,
+  Phone,
+  Shield,
+  Users,
+  LogOut,
+} from 'lucide-react';
+import coupleImage from '../assets/couple.png';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 
 interface HeaderProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
-  user: any; // Add user prop to conditionally show logout
+  user: any;
 }
 
 const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange, user }) => {
+  const { t, i18n } = useTranslation();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
   const navItems = [
-    { id: 'dashboard', label: 'Home', icon: Home },
-    { 
-      id: 'reminders', 
-      label: 'Reminders', 
-      icon: Bell,
-      highlight: true,
-      color: 'orange'
-    },
-    { 
-      id: 'health', 
-      label: 'Health', 
-      icon: Activity,
-      highlight: true,
-      color: 'green'
-    },
-    { 
-      id: 'entertainment', 
-      label: 'Entertainment', 
-      icon: Music,
-      highlight: true,
-      color: 'purple'
-    },
-    { 
-      id: 'companionship', 
-      label: 'Chat', 
-      icon: MessageCircle,
-      highlight: true,
-      color: 'pink'
-    },
-    { 
-      id: 'tech-assist', 
-      label: 'Tech Help', 
-      icon: Phone,
-      highlight: true,
-      color: 'blue'
-    },
-    { 
-      id: 'emergency', 
-      label: 'Emergency', 
-      icon: Shield, 
-      color: 'red' 
-    },
-    { 
-      id: 'caregiver', 
-      label: 'Family', 
-      icon: Users 
-    },
+    { id: 'dashboard', label: t('home'), icon: Home },
+    { id: 'reminders', label: t('reminders'), icon: Bell, highlight: true, color: 'orange' },
+    { id: 'health', label: t('health'), icon: Activity, highlight: true, color: 'green' },
+    { id: 'entertainment', label: t('entertainment'), icon: Music, highlight: true, color: 'purple' },
+    { id: 'companionship', label: t('chat'), icon: MessageCircle, highlight: true, color: 'pink' },
+    { id: 'tech-assist', label: t('techHelp'), icon: Phone, highlight: true, color: 'blue' },
+    { id: 'emergency', label: t('emergency'), icon: Shield, color: 'red' },
+    { id: 'caregiver', label: t('family'), icon: Users },
   ];
 
   const handleLogout = async () => {
@@ -70,37 +48,27 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange, user })
   };
 
   const getButtonClasses = (item: typeof navItems[0]) => {
-    const baseClasses = 'flex flex-col items-center px-4 py-3 rounded-lg transition-all duration-200 text-base font-medium';
-    
+    const base = 'flex flex-col items-center px-4 py-3 rounded-lg transition-all duration-200 text-base font-medium';
     if (activeSection === item.id) {
-      if (item.color) {
-        return `${baseClasses} bg-${item.color}-100 text-${item.color}-700 shadow-md border-2 border-${item.color}-300`;
-      }
-      return `${baseClasses} bg-gray-100 text-gray-700 shadow-md`;
+      return item.color
+        ? `${base} bg-${item.color}-100 text-${item.color}-700 shadow-md border-2 border-${item.color}-300`
+        : `${base} bg-gray-100 text-gray-700 shadow-md`;
     }
-    
-    if (item.color) {
-      return `${baseClasses} text-${item.color}-600 hover:bg-${item.color}-50 hover:border hover:border-${item.color}-200`;
-    }
-    
-    return `${baseClasses} text-gray-600 hover:bg-gray-100 hover:text-blue-600`;
+    return item.color
+      ? `${base} text-${item.color}-600 hover:bg-${item.color}-50 hover:border hover:border-${item.color}-200`
+      : `${base} text-gray-600 hover:bg-gray-100 hover:text-blue-600`;
   };
 
   const getMobileButtonClasses = (item: typeof navItems[0]) => {
-    const baseClasses = 'flex flex-col items-center px-3 py-2 rounded-lg whitespace-nowrap transition-all duration-200';
-    
+    const base = 'flex flex-col items-center px-3 py-2 rounded-lg whitespace-nowrap transition-all duration-200';
     if (activeSection === item.id) {
-      if (item.color) {
-        return `${baseClasses} bg-${item.color}-100 text-${item.color}-700 border-2 border-${item.color}-300`;
-      }
-      return `${baseClasses} bg-gray-100 text-gray-700`;
+      return item.color
+        ? `${base} bg-${item.color}-100 text-${item.color}-700 border-2 border-${item.color}-300`
+        : `${base} bg-gray-100 text-gray-700`;
     }
-    
-    if (item.color) {
-      return `${baseClasses} text-${item.color}-600 hover:bg-${item.color}-50`;
-    }
-    
-    return `${baseClasses} text-gray-600 hover:bg-gray-100`;
+    return item.color
+      ? `${base} text-${item.color}-600 hover:bg-${item.color}-50`
+      : `${base} text-gray-600 hover:bg-gray-100`;
   };
 
   return (
@@ -110,19 +78,16 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange, user })
           {/* Logo & Title */}
           <div className="flex items-center space-x-3">
             <div className="p-1 rounded-full">
-              <img 
-                src={coupleImage} 
-                alt="Couple" 
-                className="h-12 w-12 object-contain" 
-              />
+              <img src={coupleImage} alt="Couple" className="h-12 w-12 object-contain" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Sahyog AI</h1>
-              <p className="text-lg text-gray-600">Your Caring Companion</p>
+              <p className="text-lg text-gray-600">{t('caringCompanion')}</p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-4">
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-1">
               {navItems.map((item) => (
                 <button
@@ -139,20 +104,33 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange, user })
                   <span className="text-sm">{item.label}</span>
                 </button>
               ))}
+              
+              {/* Language Selector - Moved after navigation items */}
+              <div className="flex items-center ml-2">
+                <select
+                  onChange={(e) => changeLanguage(e.target.value)}
+                  className="border rounded px-2 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+                  defaultValue={i18n.language}
+                >
+                  <option value="en">EN</option>
+                  <option value="hi">हिंदी</option>
+                </select>
+              </div>
             </nav>
 
+            {/* Sign Out */}
             {user && (
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 text-sm bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden md:inline">Sign Out</span>
+                <span className="hidden md:inline">{t('signOut')}</span>
               </button>
             )}
           </div>
         </div>
-        
+
         {/* Mobile Navigation */}
         <div className="md:hidden pb-4">
           <div className="flex overflow-x-auto space-x-2 pb-2">
@@ -171,13 +149,26 @@ const Header: React.FC<HeaderProps> = ({ activeSection, onSectionChange, user })
                 <span className="text-xs">{item.label}</span>
               </button>
             ))}
+            
+            {/* Mobile Language Selector */}
+            <div className="flex items-center px-2">
+              <select
+                onChange={(e) => changeLanguage(e.target.value)}
+                className="border rounded px-2 py-1 bg-gray-100 text-gray-700 text-xs"
+                defaultValue={i18n.language}
+              >
+                <option value="en">EN</option>
+                <option value="hi">HI</option>
+              </select>
+            </div>
+            
             {user && (
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-1 text-sm bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 transition"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="text-xs">Sign Out</span>
+                <span className="text-xs">{t('signOut')}</span>
               </button>
             )}
           </div>

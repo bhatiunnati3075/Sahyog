@@ -10,21 +10,28 @@ import {
   MessageCircle,
   Sparkles,
   Flower,
-  Star
+  Star,
+  BookOpen,
+  Cloud,
+  Users,
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
-// Initialize Gemini with API key directly (for demo purposes)
-const genAI = new GoogleGenerativeAI('AIzaSyBbVF2qPA7VXsLoYmFNWqa6U4JmsoZvKW4'); // Replace with your actual API key
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+// Initialize Gemini with API key
+const genAI = new GoogleGenerativeAI('AIzaSyBbVF2qPA7VXsLoYmFNWqa6U4JmsoZvKW4');
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'sahyog';
   timestamp: Date;
-  emotion?: 'happy' | 'caring' | 'encouraging' | 'thoughtful';
+  emotion?: 'happy' | 'caring' | 'encouraging' | 'thoughtful' | 'listening';
+  quickReplies?: string[];
 }
 
 const moodResponses = {
@@ -55,17 +62,33 @@ const moodResponses = {
     animation: "💭",
     color: "bg-purple-100",
     icon: Moon
+  },
+  lonely: {
+    text: "I'm here with you. Would you like me to connect you with family or share a story?",
+    emotion: "caring",
+    animation: "🤗",
+    color: "bg-pink-100",
+    icon: Users
   }
 };
 
 const Companionship: React.FC = () => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Namaste! I\'m so happy to see you today. How are you feeling?',
+      text: t('companionship.welcomeMessage'),
       sender: 'sahyog',
       timestamp: new Date(),
-      emotion: 'happy'
+      emotion: 'happy',
+      quickReplies: [
+        t('companionship.quickReplies.feelingGood'),
+        t('companionship.quickReplies.tellStory'),
+        t('companionship.quickReplies.feelingLonely'),
+        t('companionship.quickReplies.weather'),
+        t('companionship.quickReplies.needEncouragement'),
+        t('companionship.quickReplies.chatAboutFamily')
+      ]
     }
   ]);
   
@@ -73,6 +96,7 @@ const Companionship: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [showMoodAnimation, setShowMoodAnimation] = useState(false);
+  const [activeQuickReplies, setActiveQuickReplies] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -88,14 +112,17 @@ const Companionship: React.FC = () => {
       const prompt = `
       You are Sahyog, a compassionate AI companion for elderly users in India.
       Respond to the following message in a warm, caring manner in simple English or Hinglish.
-      Keep responses under 2 sentences. Choose an appropriate emotion (happy, caring, encouraging, thoughtful).
+      Keep responses conversational and under 2 sentences. 
+      Choose an appropriate emotion (happy, caring, encouraging, thoughtful, listening).
+      If appropriate, suggest 2-3 quick reply options in JSON format.
       
       User message: "${userMessage}"
       
       Respond in this JSON format:
       {
         "text": "your response here",
-        "emotion": "chosen_emotion"
+        "emotion": "chosen_emotion",
+        "quickReplies": ["option1", "option2", "option3"]
       }
       `;
 
@@ -111,19 +138,20 @@ const Companionship: React.FC = () => {
       return JSON.parse(jsonStr);
     } catch (error) {
       console.error('Error getting Gemini response:', error);
-      // Fallback response
       return {
-        text: "I'm here for you. Would you like to talk more about this?",
-        emotion: "caring"
+        text: t('companionship.fallbackResponse'),
+        emotion: "caring",
+        quickReplies: []
       };
     }
   };
 
-  const sendMessage = async () => {
-    if (inputMessage.trim()) {
+  const sendMessage = async (message?: string) => {
+    const msg = message || inputMessage;
+    if (msg.trim()) {
       const userMessage: Message = {
         id: Date.now().toString(),
-        text: inputMessage,
+        text: msg,
         sender: 'user',
         timestamp: new Date()
       };
@@ -131,26 +159,29 @@ const Companionship: React.FC = () => {
       setMessages(prev => [...prev, userMessage]);
       setInputMessage('');
       setIsTyping(true);
+      setActiveQuickReplies([]);
 
       try {
-        // Get response from Gemini
-        const geminiResponse = await getGeminiResponse(inputMessage);
+        const geminiResponse = await getGeminiResponse(msg);
         
         const sahyogMessage: Message = {
           id: Date.now().toString() + '_sahyog',
           text: geminiResponse.text,
           sender: 'sahyog',
           timestamp: new Date(),
-          emotion: geminiResponse.emotion
+          emotion: geminiResponse.emotion,
+          quickReplies: geminiResponse.quickReplies
         };
 
         setMessages(prev => [...prev, sahyogMessage]);
+        if (geminiResponse.quickReplies && geminiResponse.quickReplies.length > 0) {
+          setActiveQuickReplies(geminiResponse.quickReplies);
+        }
       } catch (error) {
         console.error('Error generating response:', error);
-        // Fallback to simple response if Gemini fails
         const sahyogMessage: Message = {
           id: Date.now().toString() + '_sahyog',
-          text: "I'm here to listen. Tell me more about how you're feeling.",
+          text: t('companionship.errorResponse'),
           sender: 'sahyog',
           timestamp: new Date(),
           emotion: 'caring'
@@ -162,22 +193,26 @@ const Companionship: React.FC = () => {
     }
   };
 
+  const handleQuickReply = (reply: string) => {
+    setInputMessage(reply);
+    sendMessage(reply);
+  };
+
   const handleMoodSelection = (mood: string) => {
     setSelectedMood(mood);
     setShowMoodAnimation(true);
     
-    // Add user mood message
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: `I'm feeling ${mood.toLowerCase()} today`,
+      text: t('companionship.moodSelection', { mood: t(`companionship.moods.${mood}`) }),
       sender: 'user',
       timestamp: new Date()
     };
     
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
+    setActiveQuickReplies([]);
     
-    // Add Sahyog's response after a short delay
     setTimeout(() => {
       const response = moodResponses[mood as keyof typeof moodResponses];
       const sahyogMessage: Message = {
@@ -185,27 +220,23 @@ const Companionship: React.FC = () => {
         text: response.text,
         sender: 'sahyog',
         timestamp: new Date(),
-        emotion: response.emotion as any
+        emotion: response.emotion as any,
+        quickReplies: mood === 'lonely' ? 
+          [t('companionship.quickReplies.connectFamily'), t('companionship.quickReplies.tellStory')] : 
+          []
       };
       
       setMessages(prev => [...prev, sahyogMessage]);
+      if (mood === 'lonely') {
+        setActiveQuickReplies([t('companionship.quickReplies.connectFamily'), t('companionship.quickReplies.tellStory')]);
+      }
       setIsTyping(false);
     }, 1500);
     
-    // Hide animation after 3 seconds
     setTimeout(() => {
       setShowMoodAnimation(false);
     }, 3000);
   };
-
-  const quickReplies = [
-    "I'm feeling good today",
-    "Tell me a story",
-    "I'm feeling lonely",
-    "What's the weather like?",
-    "I need some encouragement",
-    "Let's chat about family"
-  ];
 
   const getEmotionIcon = (emotion?: string) => {
     switch (emotion) {
@@ -213,12 +244,15 @@ const Companionship: React.FC = () => {
       case 'caring': return <Heart className="h-4 w-4 text-red-500" />;
       case 'encouraging': return <Sparkles className="h-4 w-4 text-purple-500" />;
       case 'thoughtful': return <Coffee className="h-4 w-4 text-blue-500" />;
+      case 'listening': return <MessageCircle className="h-4 w-4 text-green-500" />;
       default: return <MessageCircle className="h-4 w-4 text-gray-400" />;
     }
   };
 
   const currentHour = new Date().getHours();
-  const greeting = currentHour < 12 ? 'Good Morning' : currentHour < 17 ? 'Good Afternoon' : 'Good Evening';
+  const greeting = currentHour < 12 ? t('time.morning') : 
+                   currentHour < 17 ? t('time.afternoon') : 
+                   t('time.evening');
 
   return (
     <div className="space-y-6">
@@ -228,8 +262,8 @@ const Companionship: React.FC = () => {
             <Heart className="h-12 w-12 text-white" />
           </div>
           <div>
-            <h2 className="text-4xl font-bold mb-2">Chat with Sahyog</h2>
-            <p className="text-xl">{greeting}! I'm here to listen and chat with you</p>
+            <h2 className="text-4xl font-bold mb-2">{t('companionship.title')}</h2>
+            <p className="text-xl">{greeting}! {t('companionship.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -243,7 +277,10 @@ const Companionship: React.FC = () => {
               key={message.id}
               className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
                 className={`max-w-xs lg:max-w-md px-6 py-4 rounded-2xl ${
                   message.sender === 'user'
                     ? 'bg-blue-500 text-white'
@@ -268,7 +305,7 @@ const Companionship: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           ))}
           
@@ -291,20 +328,24 @@ const Companionship: React.FC = () => {
         </div>
 
         {/* Quick Replies */}
-        <div className="px-6 py-4 border-t border-gray-200">
-          <p className="text-sm text-gray-500 mb-3">Quick replies:</p>
-          <div className="flex flex-wrap gap-2">
-            {quickReplies.map((reply, index) => (
-              <button
-                key={index}
-                onClick={() => setInputMessage(reply)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-colors duration-200"
-              >
-                {reply}
-              </button>
-            ))}
+        {(activeQuickReplies.length > 0 || messages[messages.length - 1]?.quickReplies) && (
+          <div className="px-6 py-4 border-t border-gray-200">
+            <p className="text-sm text-gray-500 mb-3">{t('companionship.quickRepliesLabel')}:</p>
+            <div className="flex flex-wrap gap-2">
+              {(activeQuickReplies.length > 0 ? activeQuickReplies : messages[messages.length - 1]?.quickReplies || []).map((reply, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleQuickReply(reply)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-colors duration-200"
+                >
+                  {reply}
+                </motion.button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Message Input */}
         <div className="p-6 border-t border-gray-200 bg-white">
@@ -315,19 +356,21 @@ const Companionship: React.FC = () => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="Type your message here..."
+                placeholder={t('companionship.messagePlaceholder')}
                 className="flex-1 p-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
               <button
                 className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-4 rounded-xl transition-colors duration-200"
+                aria-label="Voice input"
               >
                 <Mic className="h-6 w-6" />
               </button>
             </div>
             <button
-              onClick={sendMessage}
+              onClick={() => sendMessage()}
               disabled={!inputMessage.trim()}
               className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-300 text-white p-4 rounded-xl transition-colors duration-200"
+              aria-label="Send message"
             >
               <Send className="h-6 w-6" />
             </button>
@@ -337,7 +380,7 @@ const Companionship: React.FC = () => {
 
       {/* Mood Check */}
       <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">How are you feeling today?</h3>
+        <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('companionship.moodCheckTitle')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Object.entries(moodResponses).map(([mood, { color, icon: Icon }]) => (
             <motion.button
@@ -346,9 +389,10 @@ const Companionship: React.FC = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => handleMoodSelection(mood)}
               className={`${color} p-6 rounded-xl transition-colors duration-200 relative overflow-hidden`}
+              aria-label={`I'm feeling ${mood}`}
             >
               <Icon className="h-8 w-8 mx-auto mb-2" />
-              <p className="text-lg font-semibold">{mood}</p>
+              <p className="text-lg font-semibold">{t(`companionship.moods.${mood}`)}</p>
               
               <AnimatePresence>
                 {showMoodAnimation && selectedMood === mood && (

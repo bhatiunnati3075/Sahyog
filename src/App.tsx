@@ -9,7 +9,7 @@ import Health from './components/Health';
 import Entertainment from './components/Entertainment';
 import Companionship from './components/Companionship';
 import TechAssist from './components/TechAssist';
-import Emergency from './components/Emergency';
+import Spiritual from './components/Spiritual'; 
 import CaregiverDashboard from './components/CaregiverDashboard';
 import Login from './components/login';
 import Register from './components/registration';
@@ -45,7 +45,7 @@ function App() {
       case 'entertainment': return <Entertainment />;
       case 'companionship': return <Companionship />;
       case 'tech-assist': return <TechAssist />;
-      case 'emergency': return <Emergency />;
+      case 'spiritual': return <Spiritual />; // Updated case
       case 'caregiver': return <CaregiverDashboard />;
       default: return <Dashboard onSectionChange={setActiveSection} />;
     }

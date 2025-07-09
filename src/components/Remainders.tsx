@@ -12,6 +12,7 @@ import {
   X,
   Edit3
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Reminder {
   id: string;
@@ -24,42 +25,44 @@ interface Reminder {
 }
 
 const Reminders: React.FC = () => {
+  const { t } = useTranslation();
+
   const [reminders, setReminders] = useState<Reminder[]>([
     {
       id: '1',
-      title: 'Morning Medicine',
+      title: t('morningMedicine'),
       time: '09:00',
       type: 'medication',
       completed: true,
       recurring: true,
-      description: 'Blood pressure tablets - 2 pills'
+      description: t('bpMedication')
     },
     {
       id: '2',
-      title: 'Doctor Appointment',
+      title: t('doctorAppointment'),
       time: '14:00',
       type: 'appointment',
       completed: false,
       recurring: false,
-      description: 'Dr. Sharma - Cardiology checkup'
+      description: t('cardiology')
     },
     {
       id: '3',
-      title: 'Evening Medicine',
+      title: t('eveningMedicine'),
       time: '20:00',
       type: 'medication',
       completed: false,
       recurring: true,
-      description: 'Diabetes medicine - 1 tablet'
+      description: t('diabetesMedicine')
     },
     {
       id: '4',
-      title: 'Family Call',
+      title: t('familyCall'),
       time: '18:00',
       type: 'family',
       completed: false,
       recurring: true,
-      description: 'Weekly call with Priya beta'
+      description: t('weeklyCall')
     }
   ]);
 
@@ -133,8 +136,8 @@ const Reminders: React.FC = () => {
   return (
     <div className="space-y-8">
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
-        <h2 className="text-4xl font-bold mb-4">Reminders</h2>
-        <p className="text-xl">Your voice, our care</p>
+        <h2 className="text-4xl font-bold mb-4">{t('reminders')}</h2>
+        <p className="text-xl">{t('voiceCare')}</p>
       </div>
 
       {/* Quick Stats */}
@@ -146,7 +149,7 @@ const Reminders: React.FC = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-800">{upcomingReminders.length}</h3>
-              <p className="text-gray-600 text-lg">Reminders</p>
+              <p className="text-gray-600 text-lg">{t('reminders')}</p>
             </div>
           </div>
         </div>
@@ -158,7 +161,7 @@ const Reminders: React.FC = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-800">{completedReminders.length}</h3>
-              <p className="text-gray-600 text-lg">Completed</p>
+              <p className="text-gray-600 text-lg">{t('completedText')}</p>
             </div>
           </div>
         </div>
@@ -172,8 +175,8 @@ const Reminders: React.FC = () => {
               <Plus className="h-8 w-8 text-orange-600" />
             </div>
             <div className="text-left">
-              <h3 className="text-xl font-bold text-gray-800">Add New</h3>
-              <p className="text-gray-600">Create a new reminder</p>
+              <h3 className="text-xl font-bold text-gray-800">{t('addNew')}</h3>
+              <p className="text-gray-600">{t('createNewReminder')}</p>
             </div>
           </button>
         </div>
@@ -182,22 +185,22 @@ const Reminders: React.FC = () => {
       {/* Add Reminder Form */}
       {showAddForm && (
         <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-blue-200">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">Add New Reminder</h3>
+          <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('addNewReminder')}</h3>
           <div className="space-y-6">
             <div>
-              <label className="block text-lg font-medium text-gray-700 mb-2">Title</label>
+              <label className="block text-lg font-medium text-gray-700 mb-2">{t('title')}</label>
               <input
                 type="text"
                 value={newReminder.title}
                 onChange={(e) => setNewReminder(prev => ({ ...prev, title: e.target.value }))}
                 className="w-full p-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="What to remember"
+                placeholder={t('whatToRemember')}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-lg font-medium text-gray-700 mb-2">Time</label>
+                <label className="block text-lg font-medium text-gray-700 mb-2">{t('time')}</label>
                 <input
                   type="time"
                   value={newReminder.time}
@@ -207,30 +210,30 @@ const Reminders: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-lg font-medium text-gray-700 mb-2">Type</label>
+                <label className="block text-lg font-medium text-gray-700 mb-2">{t('type')}</label>
                 <select
                   value={newReminder.type}
                   onChange={(e) => setNewReminder(prev => ({ ...prev, type: e.target.value as any }))}
                   className="w-full p-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="medication">Medicine</option>
-                  <option value="appointment">Appointment</option>
-                  <option value="meal">Meal</option>
-                  <option value="water">Water</option>
-                  <option value="family">Family</option>
-                  <option value="other">Other</option>
+                  <option value="medication">{t('medicine')}</option>
+                  <option value="appointment">{t('appointment')}</option>
+                  <option value="meal">{t('meal')}</option>
+                  <option value="water">{t('water')}</option>
+                  <option value="family">{t('family')}</option>
+                  <option value="other">{t('other')}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-lg font-medium text-gray-700 mb-2">Description</label>
+              <label className="block text-lg font-medium text-gray-700 mb-2">{t('description')}</label>
               <textarea
                 value={newReminder.description}
                 onChange={(e) => setNewReminder(prev => ({ ...prev, description: e.target.value }))}
                 className="w-full p-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows={3}
-                placeholder="Add extra details"
+                placeholder={t('addExtraDetails')}
               />
             </div>
 
@@ -242,7 +245,7 @@ const Reminders: React.FC = () => {
                 onChange={(e) => setNewReminder(prev => ({ ...prev, recurring: e.target.checked }))}
                 className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <label htmlFor="recurring" className="text-lg text-gray-700">Repeat daily</label>
+              <label htmlFor="recurring" className="text-lg text-gray-700">{t('repeatDaily')}</label>
             </div>
 
             <div className="flex space-x-4">
@@ -250,13 +253,13 @@ const Reminders: React.FC = () => {
                 onClick={addReminder}
                 className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium py-4 px-6 rounded-lg transition-colors duration-200"
               >
-                Add Reminder
+                {t('addReminder')}
               </button>
               <button
                 onClick={() => setShowAddForm(false)}
                 className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 text-lg font-medium py-4 px-6 rounded-lg transition-colors duration-200"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -266,7 +269,7 @@ const Reminders: React.FC = () => {
       {/* Upcoming Reminders */}
       {upcomingReminders.length > 0 && (
         <div className="bg-white rounded-2xl p-8 shadow-lg">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">Upcoming Today</h3>
+          <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('upcomingToday')}</h3>
           <div className="space-y-4">
             {upcomingReminders.map((reminder) => {
               const IconComponent = getTypeIcon(reminder.type);
@@ -275,7 +278,6 @@ const Reminders: React.FC = () => {
                   <div className={`${getTypeColor(reminder.type)} p-3 rounded-full`}>
                     <IconComponent className="h-6 w-6 text-white" />
                   </div>
-                  
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h4 className="text-xl font-semibold text-gray-800">{reminder.title}</h4>
@@ -287,18 +289,11 @@ const Reminders: React.FC = () => {
                       <p className="text-gray-600 text-lg">{reminder.description}</p>
                     )}
                   </div>
-
                   <div className="flex space-x-2">
-                    <button
-                      onClick={() => toggleComplete(reminder.id)}
-                      className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors duration-200"
-                    >
+                    <button onClick={() => toggleComplete(reminder.id)} className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors duration-200">
                       <Check className="h-5 w-5" />
                     </button>
-                    <button
-                      onClick={() => deleteReminder(reminder.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg transition-colors duration-200"
-                    >
+                    <button onClick={() => deleteReminder(reminder.id)} className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg transition-colors duration-200">
                       <X className="h-5 w-5" />
                     </button>
                   </div>
@@ -312,7 +307,7 @@ const Reminders: React.FC = () => {
       {/* Completed Reminders */}
       {completedReminders.length > 0 && (
         <div className="bg-white rounded-2xl p-8 shadow-lg">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">Completed Today ✓</h3>
+          <h3 className="text-2xl font-bold text-gray-800 mb-6">{t('completedToday')}</h3>
           <div className="space-y-4">
             {completedReminders.map((reminder) => {
               const IconComponent = getTypeIcon(reminder.type);
@@ -321,23 +316,18 @@ const Reminders: React.FC = () => {
                   <div className="bg-green-500 p-3 rounded-full">
                     <IconComponent className="h-6 w-6 text-white" />
                   </div>
-                  
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h4 className="text-xl font-semibold text-gray-800 line-through">{reminder.title}</h4>
                       <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                        Completed
+                        {t('completedText')}
                       </span>
                     </div>
                     {reminder.description && (
                       <p className="text-gray-600 text-lg">{reminder.description}</p>
                     )}
                   </div>
-
-                  <button
-                    onClick={() => toggleComplete(reminder.id)}
-                    className="bg-gray-300 hover:bg-gray-400 text-gray-700 p-3 rounded-lg transition-colors duration-200"
-                  >
+                  <button onClick={() => toggleComplete(reminder.id)} className="bg-gray-300 hover:bg-gray-400 text-gray-700 p-3 rounded-lg transition-colors duration-200">
                     <Edit3 className="h-5 w-5" />
                   </button>
                 </div>
